@@ -194,6 +194,18 @@ body {
   .cl-hero {
     flex-direction: column;
   }
+  /* BOTH children need flex-basis reset, not just the aside.
+     `flex: 1 1 22rem` on .cl-hero-main sizes the MAIN axis, and the main axis
+     here has just become vertical — so that 22rem stops being a width and starts
+     being a 352px minimum HEIGHT. Measured on the shipped build: 206px of empty
+     space between the hero description and the "Why it matters" box at 390px, and
+     159px at 320px, on a page whose problem is already that it is too long before
+     anything happens. The template prints this hero CSS with only .cl-hero-why
+     reset, so any lab that copies it inherits the gap. */
+  .cl-hero-main {
+    flex-basis: auto;
+    width: 100%;
+  }
   .cl-hero-why {
     flex-basis: auto;
     width: 100%;
@@ -480,6 +492,93 @@ body {
 }
 
 /* ── The size comparison ────────────────────────────────────────────────── */
+/* Two bars, to scale, same fill on both.
+   NEITHER BAR IS ACCENTED, and that is the point: size is a bandwidth trade-off,
+   not a security meter, so a bar that read as "more protection" would smuggle in
+   the "stronger" claim this lab exists to refuse. The fill is a neutral grey at
+   6.45:1 against its own track (WCAG 1.4.11 asks 3:1 of a graphic that carries
+   meaning) and the track's edge is 3.39:1 against the card. Both numbers are also
+   printed as text beside the bars, so the graphic is a second reading of a value
+   rather than the only one. */
+.size-bars {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0 0 0.9rem;
+}
+
+.size-bar-row {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) 1fr auto;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+}
+
+.size-bar-label {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.size-bar-track {
+  display: block;
+  height: 1.1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.size-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--text-muted);
+}
+
+.size-bar-value {
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  /* The three-column row cannot hold a label, a track and a number at 320px
+     without the track collapsing to nothing. Stack the label above, and keep the
+     track and its number on one line so the bar still reads against its value. */
+  .size-bar-row {
+    grid-template-columns: 1fr auto;
+  }
+  .size-bar-label {
+    grid-column: 1 / -1;
+  }
+}
+
+.size-local {
+  border: 1px dashed var(--border-strong);
+  border-radius: 9px;
+  padding: 0.6rem 0.8rem;
+  margin: 0 0 0.9rem;
+}
+
+.size-local-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.size-local-text {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-dim);
+}
+
+.size-local-text span {
+  font-family: var(--mono);
+  color: var(--text);
+}
+
 .size-rows {
   display: grid;
   gap: 0.5rem;
@@ -566,6 +665,120 @@ body {
   display: block;
   font-size: 0.9rem;
   color: var(--text-muted);
+}
+
+/* ── Panel 3: the two secrets, side by side ─────────────────────────────── */
+/* Template §2 asks for compute-both-sides-and-compare over assertion. The two
+   facts below the pair are deliberately SEPARATE rows: whether the secrets match
+   and whether ML-KEM raised an error are independent, and collapsing them is how a
+   reader concludes that ML-KEM detects tampering. It does not. */
+.compare {
+  margin: 0 0 0.9rem;
+}
+
+.compare-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 0.7rem;
+}
+
+.compare-side {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  padding: 0.6rem 0.8rem;
+}
+
+.compare-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.compare-value {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.compare-facts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.15rem 0.75rem;
+  margin: 0;
+}
+
+.compare-facts dt {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.compare-facts dd {
+  margin: 0 0 0.45rem;
+  font-weight: 600;
+}
+
+.compare-facts dd:last-child {
+  margin-bottom: 0;
+}
+
+@media (min-width: 30rem) {
+  .compare-facts {
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+  }
+  .compare-facts dd {
+    margin-bottom: 0;
+  }
+}
+
+/* ── Panel 4: who actually holds the secret ─────────────────────────────── */
+/* Three cards in the impostor state, two in the honest one. The difference is
+   carried by the sentence in each card, never by the border alone — a dashed edge
+   is a second cue, not the cue. */
+.who {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.8rem;
+  margin: 0 0 0.9rem;
+}
+
+.who-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  padding: 0.65rem 0.8rem;
+}
+
+.who-absent {
+  border-style: dashed;
+  border-color: var(--border-strong);
+  background: var(--surface);
+}
+
+.who-name {
+  margin: 0 0 0.2rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.who-role {
+  margin: 0 0 0.4rem;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.who-held {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
 }
 
 /* ── Link lists and the honesty card ───────────────────────────────────── */

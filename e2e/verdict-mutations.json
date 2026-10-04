@@ -26,25 +26,6 @@
       "tone": "pass"
      }
     }
-   },
-   "observed": {
-    "at": "2026-10-04T20:57:47.077Z",
-    "sha": "28ddb2e8a7e991bc3551735a1a035a848960358e",
-    "verdict": "KILLED",
-    "baselineSuite": "21 tests passed unmutated",
-    "bundle": "2df1c4748939 -> 2f9038d4be8a -> 2df1c4748939",
-    "failingTests": [
-     "[claims] › e2e/claims.spec.ts:72:3 › the two exchanges › panel 1 concludes what the two secrets it printed actually show",
-     "[claims] › e2e/claims.spec.ts:100:3 › the two exchanges › the two panels agree on the one thing that did not change",
-     "[claims] › e2e/claims.spec.ts:113:3 › the size comparison › the growth factor is the quotient of the two totals on screen",
-     "[claims] › e2e/claims.spec.ts:236:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the fixture is reachable, and in it every check the page makes reports success"
-    ],
-    "rules": {
-     "baselinePassed": true,
-     "fileChanged": true,
-     "servedMutatedCode": true,
-     "namedTestFailed": true
-    }
    }
   },
   "pq-match-inverted": {
@@ -66,25 +47,6 @@
       "tone": "pass"
      }
     }
-   },
-   "observed": {
-    "at": "2026-10-04T20:57:47.077Z",
-    "sha": "28ddb2e8a7e991bc3551735a1a035a848960358e",
-    "verdict": "KILLED",
-    "baselineSuite": "21 tests passed unmutated",
-    "bundle": "2df1c4748939 -> 49a2103616d4 -> 2df1c4748939",
-    "failingTests": [
-     "[claims] › e2e/claims.spec.ts:88:3 › the two exchanges › panel 2 concludes what the two secrets it printed actually show",
-     "[claims] › e2e/claims.spec.ts:100:3 › the two exchanges › the two panels agree on the one thing that did not change",
-     "[claims] › e2e/claims.spec.ts:113:3 › the size comparison › the growth factor is the quotient of the two totals on screen",
-     "[claims] › e2e/claims.spec.ts:236:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the fixture is reachable, and in it every check the page makes reports success"
-    ],
-    "rules": {
-     "baselinePassed": true,
-     "fileChanged": true,
-     "servedMutatedCode": true,
-     "namedTestFailed": true
-    }
    }
   },
   "size-ratio-inverted": {
@@ -96,29 +58,18 @@
     "size-change": {
      "test": "the growth factor is the quotient of the two totals on screen",
      "claim": {
-      "absent": "stronger",
+      "absent": [
+       "stronger",
+       "slower",
+       "handshake",
+       "Nothing else"
+      ],
       "contains": [
-       "Bigger by 35.5 times",
+       "The key-agreement messages are 35.5 times bigger",
        "2,272"
       ],
       "tone": "pass"
      }
-    }
-   },
-   "observed": {
-    "at": "2026-10-04T20:57:47.077Z",
-    "sha": "28ddb2e8a7e991bc3551735a1a035a848960358e",
-    "verdict": "KILLED",
-    "baselineSuite": "21 tests passed unmutated",
-    "bundle": "2df1c4748939 -> 66d2c301f92a -> 2df1c4748939",
-    "failingTests": [
-     "[claims] › e2e/claims.spec.ts:113:3 › the size comparison › the growth factor is the quotient of the two totals on screen"
-    ],
-    "rules": {
-     "baselinePassed": true,
-     "fileChanged": true,
-     "servedMutatedCode": true,
-     "namedTestFailed": true
     }
    }
   },
@@ -135,27 +86,9 @@
        "No error was raised and no exception was thrown",
        "32 bytes"
       ],
-      "text": "Different secrets — and nothing reported a failure",
+      "text": "Different secrets \u2014 and nothing reported a failure",
       "tone": "trap"
      }
-    }
-   },
-   "observed": {
-    "at": "2026-10-04T20:57:47.077Z",
-    "sha": "28ddb2e8a7e991bc3551735a1a035a848960358e",
-    "verdict": "KILLED",
-    "baselineSuite": "21 tests passed unmutated",
-    "bundle": "2df1c4748939 -> 10997e519ad1 -> 2df1c4748939",
-    "failingTests": [
-     "[claims] › e2e/claims.spec.ts:178:3 › breaking one byte › changing one byte leaves two different secrets and no reported failure",
-     "[claims] › e2e/claims.spec.ts:199:3 › breaking one byte › re-running panel 2 retires the broken result and says it was retired",
-     "[claims] › e2e/claims.spec.ts:214:3 › breaking one byte › re-running panel 1 does NOT retire a fresh broken result"
-    ],
-    "rules": {
-     "baselinePassed": true,
-     "fileChanged": true,
-     "servedMutatedCode": true,
-     "namedTestFailed": true
     }
    }
   },
@@ -173,26 +106,9 @@
        "1,184 bytes",
        "1,088 bytes"
       ],
-      "text": "Same secret on both sides — and Rae is not one of them",
+      "text": "Same secret on both sides \u2014 and Rae is not one of them",
       "tone": "alarm"
      }
-    }
-   },
-   "observed": {
-    "at": "2026-10-04T20:57:47.077Z",
-    "sha": "28ddb2e8a7e991bc3551735a1a035a848960358e",
-    "verdict": "KILLED",
-    "baselineSuite": "21 tests passed unmutated",
-    "bundle": "2df1c4748939 -> 5e459d7fa28b -> 2df1c4748939",
-    "failingTests": [
-     "[claims] › e2e/claims.spec.ts:236:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the fixture is reachable, and in it every check the page makes reports success",
-     "[claims] › e2e/claims.spec.ts:260:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the limitation is on screen in that state, not in the README"
-    ],
-    "rules": {
-     "baselinePassed": true,
-     "fileChanged": true,
-     "servedMutatedCode": true,
-     "namedTestFailed": true
     }
    }
   },
@@ -209,22 +125,6 @@
       "tone": "alarm"
      }
     }
-   },
-   "observed": {
-    "at": "2026-10-04T20:57:47.077Z",
-    "sha": "28ddb2e8a7e991bc3551735a1a035a848960358e",
-    "verdict": "KILLED",
-    "baselineSuite": "21 tests passed unmutated",
-    "bundle": "2df1c4748939 -> 26f8441918e9 -> 2df1c4748939",
-    "failingTests": [
-     "[claims] › e2e/claims.spec.ts:260:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the limitation is on screen in that state, not in the README"
-    ],
-    "rules": {
-     "baselinePassed": true,
-     "fileChanged": true,
-     "servedMutatedCode": true,
-     "namedTestFailed": true
-    }
    }
   },
   "panel-1-retires-panel-3": {
@@ -236,25 +136,24 @@
     "byte-flip": {
      "test": "re-running panel 1 does NOT retire a fresh broken result",
      "claim": {
-      "text": "Different secrets — and nothing reported a failure",
+      "text": "Different secrets \u2014 and nothing reported a failure",
       "tone": "trap"
      }
     }
-   },
-   "observed": {
-    "at": "2026-10-04T20:57:47.077Z",
-    "sha": "28ddb2e8a7e991bc3551735a1a035a848960358e",
-    "verdict": "KILLED",
-    "baselineSuite": "21 tests passed unmutated",
-    "bundle": "2df1c4748939 -> 5164251c42b3 -> 2df1c4748939",
-    "failingTests": [
-     "[claims] › e2e/claims.spec.ts:214:3 › breaking one byte › re-running panel 1 does NOT retire a fresh broken result"
-    ],
-    "rules": {
-     "baselinePassed": true,
-     "fileChanged": true,
-     "servedMutatedCode": true,
-     "namedTestFailed": true
+   }
+  },
+  "size-bar-not-to-scale": {
+   "file": "src/ui/sizesPanel.ts",
+   "find": "                style: `width:${((bytes / widest) * 100).toFixed(2)}%`,",
+   "replace": "                style: `width:${Math.max(40, (bytes / widest) * 100).toFixed(2)}%`,",
+   "why": "The bars are new, and a chart is a new way to get a ratio wrong that a reader has no way to check. This patch floors every bar at 40% of the track, which makes the 64-byte bar look roughly a third as long as the 2,272-byte one instead of a fortieth -- while every printed number, the quotient and the verdict all stay correct. A reader who trusts the picture is told something between 10 and 20 times wrong by a page that is otherwise honest. Only a test that reads the PAINTED widths back and divides them can see it, which is why the claims test measures getBoundingClientRect rather than the style attribute it would be re-deriving.",
+   "kills": {
+    "size-change": {
+     "test": "the two bars are drawn to the scale of the numbers beside them",
+     "claim": {
+      "contains": "The key-agreement messages are 35.5 times bigger",
+      "tone": "pass"
+     }
     }
    }
   }

@@ -163,29 +163,36 @@
         <aside class="cl-hero-why" aria-label="Why it matters">
           <span class="cl-hero-why-label">WHY IT MATTERS</span>
           <p class="cl-hero-why-text">
-            Almost everything you read about post-quantum cryptography calls it stronger, and
-            that is not what changed. It is a lock built on a different hard problem, because the
-            problem today's keys use has a known quantum solution — and getting that one
-            distinction wrong is what leads people to migrate the wrong things, in the wrong
-            order, at the wrong time.
+            "Post-quantum" gets read as "stronger", and that is not what changed. It is a lock
+            built on a different hard problem, because the problem today's keys use has a known
+            quantum solution. It is the most common misunderstanding about the subject, and acting
+            on it leads people to migrate the wrong things in the wrong order.
           </p>
         </aside>
       </div>
 
       <main>
-        <section class="card intro" aria-labelledby="intro-title">
+        <section class="card intro" id="panel-intro" aria-labelledby="intro-title">
           <h2 id="intro-title">Start here — what "post-quantum" actually means</h2>
           <p>
-            When two people want to keep something private, they first have to agree on a secret
-            — a number only they know — even though everything they send each other can be read
-            by anyone in between. There are ways to do that, and your browser does it every time
-            you load a page over HTTPS.
+            <strong>PQC is post-quantum cryptography.</strong> It runs on ordinary computers — the
+            one you are reading this on will do both halves of this page in a few milliseconds.
+            The "quantum" in the name is the attacker it is built against, not the machine it
+            needs.
           </p>
           <p>
-            The way it is done today relies on a particular maths problem being hard to undo. A
-            computer that does not exist yet — a large quantum computer — is expected to be able
-            to undo it. So people built new ways to agree on a secret that rely on a
-            <em>different</em> hard problem, one that machine is not expected to help with. Those
+            When two people want to keep something private, they first have to agree on a
+            <strong>shared secret</strong> — bytes both of them end up holding — even though
+            everything they send each other can be read by anyone in between. That secret is not
+            the message. A real application takes it and derives the keys that actually protect
+            the conversation. Agreeing on it is the step this page is about, and your browser does
+            it every time you load a page over HTTPS.
+          </p>
+          <p>
+            The way it is done today rests on one particular maths problem being hard to undo.
+            Quantum computers exist; one big enough to undo that problem does not, and is expected
+            to be able to. So people built other ways to agree on a secret that rest on a
+            <em>different</em> hard problem — one that machine is not expected to help with. Those
             are what "post-quantum" means.
           </p>
           <div class="callout callout-rule">
@@ -198,9 +205,9 @@
             </p>
           </div>
           <p class="intro-plan">
-            Below: the same job done twice, once the way it is done today and once the
-            post-quantum way, with real cryptography both times. Then the one thing that actually
-            changed, one byte broken on purpose, and one thing neither of them does for you.
+            Below: the same job done twice, once the way it is done today and once the post-quantum
+            way, with real cryptography both times. Then the one thing that measurably changed, one
+            byte broken on purpose, and one thing neither method does for you.
           </p>
         </section>
 
@@ -227,10 +234,10 @@
             <p>
               <strong>Here is the part that matters.</strong> Everything an eavesdropper needs is
               in the two values above — they crossed the wire in the clear. Today, having those
-              two values does not get you the secret. A large quantum computer is expected to be
-              able to work out the secret from them anyway. Not because it tries every
-              possibility faster, but because the particular problem this method rests on turns
-              out to have a quantum shortcut.
+              two values does not get you the secret. A quantum computer large enough to work it
+              out from them is expected to be able to. No such machine has been built, and the
+              reason it would work is not that it tries every possibility faster: the particular
+              problem this method rests on turns out to have a quantum shortcut.
             </p>
             <p class="panel-link">
               That shortcut has a name and a mechanism, and it is a lab of its own:
@@ -246,8 +253,15 @@
           </div>
           <p class="panel-lede">
             Same two people, same goal, same page layout. This time Rae publishes a key, Dev
-            seals a box to it, and Rae opens the box. Both end up holding the same secret. This
-            is ML-KEM-768 — the real thing, from the published standard, running in this tab.
+            seals a box to it, and Rae opens the box. Both end up holding the same secret. This is
+            ML-KEM-768 — the real thing, from the published standard, running in this tab.
+          </p>
+          <p class="panel-lede">
+            One thing to be clear about, because the word "box" invites it: <strong>nothing of
+            Dev's is inside that box.</strong> Dev does not put a message or a password in it.
+            Sealing the box is what <em>produces</em> the fresh secret on Dev's side, and opening
+            it is what reproduces the same secret on Rae's. It is a way to agree, not a way to
+            send.
           </p>
           <div class="exchange-body" id="pq-body"></div>
           <button class="btn btn-primary" type="button" id="pq-run">
@@ -255,9 +269,15 @@
           </button>
           <div class="panel-after">
             <p>
-              A large quantum computer is <strong>not</strong> expected to help with the problem
-              this one rests on. That is the whole change. The secret is the same size, the two
-              sides still match, and the job is the same job.
+              A quantum computer is <strong>not</strong> expected to help with the problem this one
+              rests on. That is the whole change. The secret is the same size, the two sides still
+              match, and the job is the same job.
+            </p>
+            <p>
+              The bytes above are not the bytes in panel 1, and they are not meant to be. These
+              are two separate exchanges run independently; each one agrees with <em>itself</em>,
+              which is the only thing either is trying to do. Two methods reaching the same secret
+              as each other would be a bug, not a feature.
             </p>
           </div>
         </section>
@@ -273,13 +293,17 @@
           </p>
           <div id="sizes-body"></div>
           <p class="panel-note">
-            This is not a footnote. Handshakes getting bigger is the real engineering consequence
-            of the change: 1,184 bytes do not fit where 32 did, and a message that no longer fits
-            is a message something along the way may refuse, truncate, or quietly negotiate away.
-            That is the subject of
-            <a href="https://systemslibrarian.github.io/crypto-lab-downgrade-wire/" target="_blank" rel="noopener noreferrer">Downgrade Wire</a>,
-            and it is why today's deployments run both exchanges together rather than swapping one
-            for the other.
+            This is not a footnote. Bigger messages are the real engineering consequence of the
+            change: 1,184 bytes do not fit where 32 did, and a message that no longer fits is a
+            message something along the way may refuse, truncate, or quietly negotiate away. That
+            is the subject of
+            <a href="https://systemslibrarian.github.io/crypto-lab-downgrade-wire/" target="_blank" rel="noopener noreferrer">Downgrade Wire</a>.
+          </p>
+          <p class="panel-note">
+            It is <em>not</em> why today's deployments run both exchanges together. They do that to
+            avoid betting everything on one assumption: ML-KEM is new, and if a weakness were found
+            in it, a session that also ran X25519 has not been lost. Running both costs more bytes
+            rather than saving them — it is a hedge against being wrong, not a fix for the size.
           </p>
         </section>
 
@@ -295,11 +319,19 @@
           <div id="break-body"></div>
           <div class="panel-after">
             <p>
-              <strong>Nothing failed.</strong> There was no error, no exception, no rejected
-              message. Rae opened a box that had been tampered with and got back a perfectly
-              well-formed secret that simply is not Dev's. That is by design: the standard
-              specifies this behaviour rather than an error, and a program that does not compare
-              the two secrets afterwards will never know.
+              <strong>ML-KEM did not report a failure.</strong> No error, no exception, no
+              rejected message. Rae opened a box that had been tampered with and got back a
+              perfectly well-formed secret that simply is not Dev's. The standard specifies that
+              behaviour rather than an error.
+            </p>
+            <p>
+              A complete protocol <em>can</em> catch this, and not by mailing the secrets to each
+              other to compare — that would hand them to the eavesdropper. It catches it the next
+              time the secret is used: each side sends a short value computed <em>with</em> the key
+              (key confirmation), or the first real message carries an authentication tag the other
+              side checks. Disagreeing keys fail that check immediately. What this panel shows is
+              that the failure surfaces one layer up, and software that skips that layer never
+              hears about it.
             </p>
             <p class="panel-link">
               What goes wrong when real software forgets to check, in depth:
@@ -326,22 +358,24 @@
             <h2 id="story-title">Recorded today, read later</h2>
           </div>
           <p>
-            Someone copies your conversation off the wire this afternoon. They cannot read it —
-            they have the two public values and nothing else. So they put it on a disk, and they
-            keep the disk.
+            Someone records your connection this afternoon and keeps <em>all</em> of it: the public
+            values the two sides exchanged, and the encrypted bytes of everything you said
+            afterwards. They cannot read a word of it today. That is the point — they are not
+            trying to. They put the whole recording on a disk, and they keep the disk.
           </p>
           <p>
-            Years later the machine exists. They go back to the disk. The conversation you had
-            this afternoon was protected by panel 1, and panel 1 is the one with the shortcut, so
-            now they can read it. Nothing about that afternoon can be changed afterwards: the
-            bytes are already on their disk, and the decision about which lock protected them was
-            made the day the connection opened.
+            Years later a large enough machine exists. They go back to the disk, use it on the
+            recorded public values to work out that afternoon's shared secret, and then use that
+            secret to decrypt the conversation they already have. Nothing about that afternoon can
+            be changed afterwards: the bytes are on their disk, and the decision about which
+            method protected them was made the day the connection opened.
           </p>
           <p>
-            That is the whole argument for moving now rather than when the machine arrives. It
-            only bites for secrets that still matter years from now — a medical record, a source's
-            name, a signing key — which is also why "migrate everything immediately" is the wrong
-            answer. What you actually need is to know which of your secrets have a long life.
+            That is the whole argument for moving before the machine arrives rather than after. It
+            only bites for information that still matters years from now — a medical record, the
+            identity of a confidential source, research data under embargo — which is also why
+            "migrate everything immediately" is the wrong answer. What you actually need to know is
+            which of your secrets have a long life.
           </p>
           <ul class="link-list" role="list">
             <li role="listitem">

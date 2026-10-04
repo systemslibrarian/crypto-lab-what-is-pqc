@@ -63,11 +63,11 @@ async function everyState(page: Page): Promise<Set<string>> {
   await collect()
   await page.locator('#pq-run').click()
   await collect()
-  await page.locator('#break-run').click()
+  await page.locator('#break-toggle').click() // break
   await collect()
-  await page.locator('#break-reset').click()
+  await page.locator('#break-toggle').click() // put it back
   await collect()
-  await page.locator('#break-run').click()
+  await page.locator('#break-toggle').click() // break again
   await page.locator('#pq-run').click() // retires panel 3
   await collect()
   await page.locator('#key-owner-impostor').check()

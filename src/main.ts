@@ -4,10 +4,10 @@ import { runPqExchange, viewPq, type PqExchange } from './exchange/mlkem.js'
 import type { AgreedSecret } from './exchange/types.js'
 import { runClassicalExchange, viewClassical } from './exchange/x25519.js'
 import { createBreakPanel } from './ui/breakPanel.js'
-import { renderExchange } from './ui/exchangePanel.js'
+import { createExchangePanel } from './ui/exchangePanel.js'
 import { mount } from './ui/dom.js'
 import { createOwnerPanel } from './ui/ownerPanel.js'
-import { renderSizes } from './ui/sizesPanel.js'
+import { createSizesPanel } from './ui/sizesPanel.js'
 
 /**
  * Wiring only. Every computation lives in src/exchange/ and every rendering
@@ -34,26 +34,31 @@ interface State {
   pqRun: number
 }
 
+/* Each panel is created ONCE and updated in place. The verdict inside every one of
+   them is a live region, and replacing that element on each run is what made
+   `aria-live` close to decorative -- see src/ui/verdict.ts. */
+const classicalPanel = createExchangePanel(classicalBody, {
+  verdictId: 'classical-agreed',
+  leftRole: 'Sends one public value, keeps one private.',
+  rightRole: 'Sends one public value, keeps one private.',
+})
+const pqPanel = createExchangePanel(pqBody, {
+  verdictId: 'pq-agreed',
+  leftRole: 'Publishes a key, keeps the one that opens it.',
+  rightRole: 'Seals a box to that key, keeping what sealing produced.',
+})
+const sizesPanel = createSizesPanel(sizesBody)
+
 function classicalStep(run: number): AgreedSecret {
   const view = viewClassical(runClassicalExchange())
-  renderExchange(classicalBody, view, {
-    verdictId: 'classical-agreed',
-    leftRole: 'Sends one public value, keeps one private.',
-    rightRole: 'Sends one public value, keeps one private.',
-    run,
-  })
+  classicalPanel.update(view, run)
   return view
 }
 
 function pqStep(run: number): { exchange: PqExchange; view: AgreedSecret } {
   const exchange = runPqExchange()
   const view = viewPq(exchange)
-  renderExchange(pqBody, view, {
-    verdictId: 'pq-agreed',
-    leftRole: 'Publishes a key, keeps the one that opens it.',
-    rightRole: 'Seals a box to that key, keeping what sealing produced.',
-    run,
-  })
+  pqPanel.update(view, run)
   return { exchange, view }
 }
 
@@ -61,7 +66,7 @@ function renderComparison(state: State): void {
   // The comparison's run serial is the pair of runs behind it, so a test can see
   // that re-running either panel re-derived the sizes rather than leaving a stale
   // quotient on screen beside two fresh exchanges.
-  renderSizes(sizesBody, state.classical, state.pq, state.classicalRun + state.pqRun)
+  sizesPanel.update(state.classical, state.pq, state.classicalRun + state.pqRun)
 }
 
 const firstPq = pqStep(1)

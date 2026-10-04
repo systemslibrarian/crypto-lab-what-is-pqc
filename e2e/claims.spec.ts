@@ -126,9 +126,66 @@ test.describe('the size comparison', () => {
 
     await expectVerdict(page, 'size-change', {
       tone: 'pass',
-      contains: [`Bigger by ${expected} times`, `${pqTotal.toLocaleString('en-US')}`],
-      absent: 'stronger',
+      contains: [
+        `The key-agreement messages are ${expected} times bigger`,
+        `${pqTotal.toLocaleString('en-US')}`,
+      ],
+      // The headline must stay scoped. "35.5 times bigger" is true of these two
+      // exchanges and of nothing else, so the verdict may not reach for a whole
+      // connection or for speed — and it may not end on "nothing else changed",
+      // which the very next panel contradicts.
+      absent: ['stronger', 'slower', 'handshake', 'Nothing else'],
     })
+  })
+
+  test('the two bars are drawn to the scale of the numbers beside them', async ({ page }) => {
+    await boot(page)
+    // THE GRAPHIC IS CROSS-CHECKED AGAINST THE ARITHMETIC. A bar chart is a second
+    // way to state a ratio, which makes it a second way to get the ratio wrong —
+    // and a reader who trusts the picture has no way to tell. So the rendered
+    // widths are read back and compared with the measured byte counts.
+    const bars = await page.$$eval('.size-bar-fill', (els) =>
+      els.map((el) => ({
+        key: el.getAttribute('data-bar'),
+        bytes: Number(el.getAttribute('data-bar-bytes')),
+        width: el.getBoundingClientRect().width,
+        trackWidth: (el.parentElement as HTMLElement).getBoundingClientRect().width,
+      })),
+    )
+    expect(bars).toHaveLength(2)
+    const widest = Math.max(...bars.map((b) => b.bytes))
+    for (const bar of bars) {
+      const painted = bar.width / bar.trackWidth
+      const expected = bar.bytes / widest
+      // Sub-pixel rounding and the track's 1px border, nothing more.
+      expect(Math.abs(painted - expected), `${bar.key} bar is not to scale`).toBeLessThan(0.02)
+    }
+
+    // The bars, the byte counts and the verdict are three statements of one ratio,
+    // so they are asserted together. A picture that disagrees with the sentence
+    // beside it is the failure this test exists for, and the reader looking at the
+    // picture is the one who cannot tell.
+    const ratio = Math.round((widest / Math.min(...bars.map((b) => b.bytes))) * 10) / 10
+    await expectVerdict(page, 'size-change', {
+      tone: 'pass',
+      contains: `The key-agreement messages are ${ratio} times bigger`,
+    })
+  })
+
+  test('the agreed secret is kept out of the transmitted-bytes comparison', async ({ page }) => {
+    await boot(page)
+    // It never crossed the wire, so counting it as traffic would be wrong. The
+    // rows and the bars must both exclude it, and it must still be ON the page —
+    // "the thing that did not change" is half the lesson.
+    const rowKeys = await page.$$eval('.size-row [data-size]', (els) =>
+      els.map((el) => el.getAttribute('data-size')),
+    )
+    expect(rowKeys.sort()).toEqual(['classical-Dev', 'classical-Rae', 'pq-Dev', 'pq-Rae'])
+    await expect(page.locator('.size-local [data-size="agreed-secret"]')).toHaveText('32 bytes')
+    const barBytes = await page.$$eval('.size-bar-fill', (els) =>
+      els.map((el) => Number(el.getAttribute('data-bar-bytes'))),
+    )
+    expect(barBytes).not.toContain(32)
   })
 
   test('the four wire rows sum to the two totals beside them', async ({ page }) => {
@@ -173,21 +230,33 @@ test.describe('breaking one byte', () => {
       text: 'Nothing has been changed yet',
       contains: ['1,088 bytes', 'untouched'],
     })
+    // The two facts are reported separately, because they are separate facts.
+    await expect(page.locator('[data-fact="match"]')).toHaveText('Yes — all 32 bytes.')
+    await expect(page.locator('[data-fact="error"]')).toHaveText('Nothing has been opened yet.')
   })
 
   test('changing one byte leaves two different secrets and no reported failure', async ({
     page,
   }) => {
     await boot(page)
-    await page.locator('#break-run').click()
+    await page.locator('#break-toggle').click()
 
-    // Read the two prefixes the verdict itself quotes and compare them HERE. The
+    // Read the two secrets the page PRINTS side by side and compare them HERE. The
     // page's own `secretsMatch` is not consulted: this is the one claim the lab
-    // exists to make, so the test re-derives the difference from what is printed.
-    const detail = await page.locator('[data-verdict="byte-flip"] .verdict-detail').innerText()
-    const quoted = prefixesIn(detail)
-    expect(quoted.length, 'the verdict must quote both secrets').toBe(2)
-    expect(quoted[0], 'the two secrets must differ after one byte changed').not.toBe(quoted[1])
+    // exists to make, so the test re-derives the difference from what is shown.
+    const rae = prefixesIn(await page.locator('[data-held="rae"]').innerText())
+    const dev = prefixesIn(await page.locator('[data-held="dev"]').innerText())
+    expect(rae.length, "Rae's secret must be printed").toBe(1)
+    expect(dev.length, "Dev's secret must be printed").toBe(1)
+    expect(rae[0], 'the two secrets must differ after one byte changed').not.toBe(dev[0])
+
+    // And the two facts stay apart: they differ, AND nothing was raised. A page
+    // that collapsed these into one line is how a reader concludes that ML-KEM
+    // detected the tampering.
+    await expect(page.locator('[data-fact="match"]')).toHaveText('No — they differ.')
+    await expect(page.locator('[data-fact="error"]')).toHaveText(
+      'No. It returned a secret and said nothing.',
+    )
 
     await expectVerdict(page, 'byte-flip', {
       tone: 'trap',
@@ -196,16 +265,59 @@ test.describe('breaking one byte', () => {
     })
   })
 
+  test('activating the control by keyboard leaves focus on it', async ({ page }) => {
+    await boot(page)
+    // WCAG 2.4.3. The button used to be destroyed and replaced on activation, which
+    // dropped focus to <body> — measured on the shipped build, in both directions.
+    // axe has no rule for it and the a11y gate could not see it, because the drive
+    // clicked rather than typed. One stable toggle is the fix, and this is the test
+    // that would have caught the defect.
+    await page.locator('#break-toggle').focus()
+    await page.keyboard.press('Enter')
+    await expect(page.locator('[data-verdict="byte-flip"]')).toHaveAttribute('data-tone', 'trap')
+    await expect(page.locator('#break-toggle')).toBeFocused()
+    await expect(page.locator('#break-toggle')).toHaveAttribute('data-mode', 'restore')
+
+    await page.keyboard.press('Enter')
+    await expect(page.locator('[data-verdict="byte-flip"]')).toHaveAttribute('data-tone', 'pass')
+    await expect(page.locator('#break-toggle')).toBeFocused()
+    await expect(page.locator('#break-toggle')).toHaveAttribute('data-mode', 'break')
+  })
+
+  test('the verdict live region is the same element across every state', async ({ page }) => {
+    await boot(page)
+    // `role="status"` names an element an assistive technology observes. Replacing
+    // that element on every render — which this page used to do — leaves the
+    // observer watching a node that is no longer in the document, and makes whether
+    // anything is announced a property of timing rather than of the markup. Whether
+    // a given screen reader announces these usefully is NOT established by this
+    // test; that needs a screen reader. What this establishes is that the live
+    // region survives, which is the precondition.
+    const stable = await page.evaluate(async () => {
+      const first = document.querySelector('[data-verdict="byte-flip"]')
+      const toggle = document.getElementById('break-toggle') as HTMLButtonElement
+      toggle.click()
+      await new Promise((r) => requestAnimationFrame(r))
+      const second = document.querySelector('[data-verdict="byte-flip"]')
+      toggle.click()
+      await new Promise((r) => requestAnimationFrame(r))
+      const third = document.querySelector('[data-verdict="byte-flip"]')
+      return first === second && second === third
+    })
+    expect(stable, 'the live region must not be replaced when the panel updates').toBe(true)
+  })
+
   test('re-running panel 2 retires the broken result and says it was retired', async ({ page }) => {
     await boot(page)
-    await page.locator('#break-run').click()
+    await page.locator('#break-toggle').click()
     await expect(page.locator('[data-verdict="byte-flip"]')).toHaveAttribute('data-tone', 'trap')
 
     await page.locator('#pq-run').click()
-    // RETIREMENT (§4.1b): the stale conclusion is gone AND the page says it went.
+    // RETIREMENT (§4.1b): the stale conclusion is gone AND the page says it went,
+    // in words aimed at the reader rather than at the panel numbering.
     await expectVerdict(page, 'byte-flip', {
       tone: 'retired',
-      text: 'Retired — panel 2 ran again',
+      text: 'That result belongs to the previous exchange',
       contains: 'no longer exists',
       absent: 'Different secrets',
     })
@@ -213,7 +325,7 @@ test.describe('breaking one byte', () => {
 
   test('re-running panel 1 does NOT retire a fresh broken result', async ({ page }) => {
     await boot(page)
-    await page.locator('#break-run').click()
+    await page.locator('#break-toggle').click()
     const before = await page.locator('[data-verdict="byte-flip"]').getAttribute('data-run')
 
     // THE NO-OP GUARD (§4.1b). Panel 3 is about panel 2's sealed box. Panel 1 is a
@@ -255,6 +367,18 @@ test.describe('the negative claim — what ML-KEM does not buy (§4.1d)', () => 
       text: 'Same secret on both sides — and Rae is not one of them',
       contains: ['Every check on this page passed', '1,184 bytes', '1,088 bytes'],
     })
+
+    // And the relationship is DRAWN, not only described: three participants, with
+    // the one Dev named holding nothing.
+    await expect(page.locator('#panel-owner .who-card')).toHaveCount(3)
+    await expect(page.locator('#panel-owner [data-who="rae"]')).toHaveClass(/who-absent/)
+    await expect(page.locator('#panel-owner [data-who="rae"]')).toContainText(
+      'Holds no part of this secret',
+    )
+    // Dev and the actual owner hold the same bytes — read off the two cards.
+    const dev = (await page.locator('#panel-owner [data-who="dev"] .who-held').innerText()).trim()
+    const mal = (await page.locator('#panel-owner [data-who="mal"] .who-held').innerText()).trim()
+    expect(dev).toBe(mal)
   })
 
   test('the limitation is on screen in that state, not in the README', async ({ page }) => {
@@ -311,7 +435,7 @@ test.describe("the brief's hard rules, as tests", () => {
   test('no sentence on the page calls post-quantum cryptography stronger', async ({ page }) => {
     await boot(page)
     await page.locator('#key-owner-impostor').check()
-    await page.locator('#break-run').click()
+    await page.locator('#break-toggle').click()
 
     // THE ONE THING THIS LAB MUST NOT DO. Every sentence that uses the word has to
     // carry its own negation, because a reader who skims one sentence out of
@@ -340,7 +464,7 @@ test.describe("the brief's hard rules, as tests", () => {
   }) => {
     await boot(page)
     await page.locator('#key-owner-impostor').check()
-    await page.locator('#break-run').click()
+    await page.locator('#break-toggle').click()
 
     // The brief forbids lattice, LWE, polynomial, ring and NTT anywhere on the page
     // except one sentence pointing at the lab that teaches them. This is a
@@ -360,6 +484,54 @@ test.describe("the brief's hard rules, as tests", () => {
     await expect(
       page.locator('a[href*="crypto-lab-lattice-gentle"]'),
     ).toHaveCount(1)
+  })
+
+  test('the page does not blame the size for why deployments run both exchanges', async ({
+    page,
+  }) => {
+    await boot(page)
+    // A correction to this page's own earlier wording. Hybrid deployments hedge the
+    // risk that ML-KEM turns out to be weak; they cost MORE bytes rather than
+    // fewer, so attributing them to the size increase is backwards. The sentence
+    // that got this wrong linked Downgrade Wire and then drew the wrong conclusion
+    // from it, which is the shape of a plausible-sounding falsehood.
+    const sizes = page.locator('#panel-sizes')
+    await expect(sizes).toContainText("It is not why today's deployments run both exchanges")
+    await expect(sizes).toContainText('a hedge against being wrong, not a fix for the size')
+  })
+
+  test('the harvest story records the encrypted bytes, not only the public values', async ({
+    page,
+  }) => {
+    await boot(page)
+    // An observer who kept only the two public values would have nothing to
+    // decrypt later. The story has to say the recording includes the traffic, or it
+    // teaches a threat model that cannot work.
+    const story = page.locator('#panel-story')
+    await expect(story).toContainText('the encrypted bytes of everything you said')
+    await expect(story).toContainText('use that secret to decrypt the conversation they already have')
+  })
+
+  test('the page says PQC runs on ordinary computers', async ({ page }) => {
+    await boot(page)
+    // The misconception next to "stronger": that post-quantum cryptography needs a
+    // quantum computer. The intro expands the acronym and denies that in its first
+    // two sentences, which is where a beginner actually reads.
+    const intro = page.locator('#panel-intro, .intro').first()
+    await expect(intro).toContainText('PQC is post-quantum cryptography')
+    await expect(intro).toContainText('runs on ordinary computers')
+    await expect(intro).toContainText('not the machine it needs')
+  })
+
+  test('the quantum claim is scoped to a machine large enough, not to all of them', async ({
+    page,
+  }) => {
+    await boot(page)
+    // Quantum computers exist. What does not exist is one big enough to undo
+    // X25519, and the page has to say which it means.
+    const text = await page.locator('#app').innerText()
+    expect(text).toContain('Quantum computers exist')
+    expect(text).not.toMatch(/computer that does not exist yet/i)
   })
 
   test('the page says what is real, what is not shown, and what it does not prove', async ({
@@ -383,7 +555,7 @@ test.describe('structural probes the a11y gate cannot answer', () => {
   test('nothing paints while the code believes it is hidden', async ({ page }) => {
     await boot(page)
     await page.locator('#key-owner-impostor').check()
-    await page.locator('#break-run').click()
+    await page.locator('#break-toggle').click()
 
     // THE [hidden] CASCADE TRAP (§4.1). A class rule that sets `display` outranks
     // the UA `[hidden]` rule, so an element can paint while the code that set the

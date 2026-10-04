@@ -366,15 +366,36 @@ export async function boot(page: Page): Promise<void> {
   }
 
   // ── The size comparison ───────────────────────────────────────────────────
-  // Six rows: two wire items per panel plus the two agreed secrets.
-  await expect(page.locator('#panel-sizes .size-row')).toHaveCount(6);
+  // Four rows: two wire items per panel. The agreed secret is NOT among them — it
+  // never crossed the wire, so it lives in its own "never sent" block and is kept
+  // out of both the rows and the bars.
+  await expect(page.locator('#panel-sizes .size-row')).toHaveCount(4);
   await expect(page.locator('#panel-sizes [data-total="classical"]')).toHaveCount(1);
   await expect(page.locator('#panel-sizes [data-total="pq"]')).toHaveCount(1);
+  await expect(page.locator('#panel-sizes [data-size="agreed-secret"]')).toHaveCount(1);
+  // Two bars, each with a measured width. That they are to SCALE is a claim and is
+  // asserted in claims.spec.ts; that there are exactly two is structure.
+  await expect(page.locator('#panel-sizes .size-bar-fill')).toHaveCount(2);
+
+  // ── Panel 3 compares both sides rather than describing them ───────────────
+  await expect(page.locator('#panel-break [data-held]')).toHaveCount(2);
+  await expect(page.locator('#panel-break [data-fact="match"]')).toHaveCount(1);
+  await expect(page.locator('#panel-break [data-fact="error"]')).toHaveCount(1);
+
+  // ── Panel 4 draws its participants ────────────────────────────────────────
+  // Two in the honest arrival state: Dev and the key's owner. The third card, the
+  // person Dev believes they are talking to, appears only in the impostor state.
+  await expect(page.locator('#panel-owner .who-card')).toHaveCount(2);
 
   // ── Controls ──────────────────────────────────────────────────────────────
-  for (const id of ['classical-run', 'pq-run', 'break-run']) {
+  for (const id of ['classical-run', 'pq-run', 'break-toggle']) {
     await expect(page.locator(`#${id}`)).toBeVisible();
   }
+
+  // Panel 3 ships ONE button that toggles, not two that replace each other. The
+  // mode it offers is structural — it decides what the arrival state scans — while
+  // its label is copy and belongs to claims.spec.ts.
+  await expect(page.locator('#break-toggle')).toHaveAttribute('data-mode', 'break');
 
   // Panel 4's owner choice: two radios in a real fieldset, exactly one checked,
   // and the honest option is the one that ships. WHICH option is pressed is
@@ -804,16 +825,24 @@ export async function driveAllStates(page: Page, label: string): Promise<void> {
   await scanAt('panel 2 re-run with a fresh key pair, still hovered');
 
   // ── Panel 3: the broken state, which is the only `trap` tone on the page ──
-  await page.locator('#break-run').click();
+  // Driven from the KEYBOARD, not by a click, because this panel's defect was a
+  // keyboard defect: the button used to be replaced on activation and focus landed
+  // on <body>. Pressing Enter and then asserting focus is still on the control is
+  // the only thing that would have caught it, and axe has no rule for it.
+  await page.locator('#break-toggle').focus();
+  await page.keyboard.press('Enter');
   await expect(verdict('byte-flip')).toHaveAttribute('data-tone', 'trap');
-  await scanAt('panel 3: one ciphertext byte changed — different secrets, no error');
+  await expect(page.locator('#break-toggle')).toBeFocused();
+  await expect(page.locator('#break-toggle')).toHaveAttribute('data-mode', 'restore');
+  await scanAt('panel 3: one ciphertext byte changed, by keyboard, control still focused');
 
-  await page.locator('#break-reset').click();
+  await page.keyboard.press('Enter');
   await expect(verdict('byte-flip')).toHaveAttribute('data-tone', 'pass');
-  await scanAt('panel 3: the byte put back, untouched again');
+  await expect(page.locator('#break-toggle')).toBeFocused();
+  await scanAt('panel 3: the byte put back, untouched again, control still focused');
 
   // ── Panel 3 retired: a result about a sealed box that no longer exists ────
-  await page.locator('#break-run').click();
+  await page.locator('#break-toggle').click();
   await expect(verdict('byte-flip')).toHaveAttribute('data-tone', 'trap');
   await page.locator('#pq-run').click();
   await expect(verdict('byte-flip')).toHaveAttribute('data-tone', 'retired');
@@ -823,11 +852,15 @@ export async function driveAllStates(page: Page, label: string): Promise<void> {
   await page.locator('#key-owner-impostor').check();
   await expect(verdict('key-owner')).toHaveAttribute('data-tone', 'alarm');
   await expect(verdict('key-owner')).toHaveAttribute('data-owner', 'mal');
+  // The third participant card appears here and nowhere else: the person Dev
+  // believes they are talking to, holding nothing.
+  await expect(page.locator('#panel-owner .who-card')).toHaveCount(3);
+  await expect(page.locator('#panel-owner .who-absent')).toHaveCount(1);
   await scanAt('panel 4: the impostor fixture — every check green, the owner unproven');
 
-  // Focused, because the panel re-renders itself and moves focus back to the
-  // radio the reader just operated: that focus ring is painted on a control
-  // inside an `alarm`-toned region and is scanned nowhere else.
+  // The radio keeps focus because this panel no longer rebuilds its own controls.
+  // That focus ring is painted on a control inside an `alarm`-toned region and is
+  // scanned nowhere else.
   await expect(page.locator('#key-owner-impostor')).toBeFocused();
   await scanAt('panel 4: the impostor radio focused inside the alarm region');
 
@@ -837,7 +870,7 @@ export async function driveAllStates(page: Page, label: string): Promise<void> {
   await scanAt('panel 4: back to the honest key');
 
   // ── Hover, which persists after a click ───────────────────────────────────
-  await page.locator('#break-run').hover();
+  await page.locator('#break-toggle').hover();
   await scanAt('a primary button hovered — its color-mix fill repainted');
 
   await page.locator('.cl-topbar .cl-btn').first().hover();
