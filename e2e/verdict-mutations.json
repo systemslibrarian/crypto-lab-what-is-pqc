@@ -129,9 +129,9 @@
   },
   "panel-1-retires-panel-3": {
    "file": "src/main.ts",
-   "find": "  renderComparison(state)\n  // Deliberately does NOT touch panel 3",
-   "replace": "  renderComparison(state)\n  breakPanel.reset(state.pqExchange, state.pqRun)\n  // Deliberately does NOT touch panel 3",
-   "why": "Section 4.1b's no-op guard, inverted: panel 1 is a different exchange, so running it must leave panel 3's conclusion standing. This patch makes an unrelated action throw away a verdict the reader is still reading. The comment it adds the call beneath is left in place deliberately, so the mutated source reads as self-contradictory rather than plausible.",
+   "find": "  renderHarvest(state)\n  // Deliberately does NOT touch panel 3",
+   "replace": "  renderHarvest(state)\n  breakPanel.reset(state.pqExchange, state.pqRun)\n  // Deliberately does NOT touch panel 3",
+   "why": "Section 4.1b's no-op guard, inverted: panel 1 is a different exchange, so running it must leave panel 3's conclusion standing. This patch makes an unrelated action throw away a verdict the reader is still reading. The comment it adds the call beneath is left in place deliberately, so the mutated source reads as self-contradictory rather than plausible. The anchor moved once already, when the harvest strip was wired into the same handler, and the runner refused the whole run rather than applying a patch that no longer matched -- which is rule 2 checked BEFORE anything is applied, and the reason a stale patch cannot be mistaken for a surviving mutation.",
    "kills": {
     "byte-flip": {
      "test": "re-running panel 1 does NOT retire a fresh broken result",
