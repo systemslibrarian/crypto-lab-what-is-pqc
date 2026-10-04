@@ -34,6 +34,12 @@ the change.
 per interaction, lives in memory, and is gone when the tab closes. **Not production crypto — a
 teaching demo.** The page says so on the page, not only here.
 
+**Reading load.** The long-form half of each panel sits behind a `<details>` summary, so arrival is
+about 1,850 words rather than the 2,300 the full text comes to. Four things may never move behind a
+summary and a claims test enforces it: the "not a stronger lock" rule, the teaching-demo line, the
+scope of the quantum claim, and the negative claim in exhibit 5. Progressive disclosure must not
+hide the qualifications that make an exhibit truthful.
+
 ## Exhibits
 
 1. **Two people agree on a secret, in the open** — a real X25519 exchange. Rae and Dev each
@@ -49,23 +55,33 @@ teaching demo.** The page says so on the page, not only here.
    match. Same layout, same labels, same colours as exhibit 1, rendered by the same function, so
    a reader sees two things doing the same job.
 
-3. **What actually changed** — the comparison, as arithmetic. 1,184 bytes and 1,088 bytes
-   against 32 and 32: **2,272 bytes on the wire instead of 64, which is 35.5 times bigger**. The
-   agreed secret stayed 32 bytes in both panels. Every number is measured from the byte arrays
-   the two panels actually produced, never typed in.
+3. **What actually changed** — the comparison, as arithmetic and as two bars drawn to scale.
+   1,184 bytes and 1,088 bytes against 32 and 32: **2,272 bytes of key-agreement messages instead
+   of 64, which is 35.5 times bigger**. Scoped to those messages and to nothing else — not a whole
+   connection's traffic, and not its speed. The 32-byte agreed secret is kept out of the bars and
+   the rows, in its own "never sent" block, because counting it as traffic would be wrong. Neither
+   bar is accented: size is a bandwidth trade-off, not a security meter. Every number is measured
+   from the byte arrays the two panels actually produced, never typed in, and a claims test reads
+   the painted bar widths back to check the picture agrees with the arithmetic.
 
-4. **Break one byte** — flip one bit of the sealed box and let Rae open it anyway. The two sides
-   end up with **different secrets, and nothing reports a failure**: no error, no exception, no
-   rejected message. FIPS 203 specifies that behaviour rather than an error, so a program that
-   does not compare the two secrets afterwards will never know. Rendered as a *difference, not an
-   error*, because nothing crashed and that is exactly the trap.
+4. **Break one byte** — flip one bit of the sealed box and let Rae open it anyway. Both secrets
+   are printed side by side, and two questions are answered **separately**: do they match (no),
+   and did ML-KEM report an error (no). Keeping those apart is the point — collapsing them is how
+   a reader concludes that ML-KEM detected the tampering. FIPS 203 specifies that behaviour rather
+   than an error. A real protocol does catch it, one layer up, through key confirmation or an
+   authentication tag — not by sending the secrets to each other to compare. Rendered as a
+   *difference, not an error*, because nothing crashed and that is exactly the trap.
    [KEM Trap](https://systemslibrarian.github.io/crypto-lab-kem-trap/) is the depth treatment.
 
 5. **Who sent that key?** — the same flawless exchange, with a choice of who handed Dev the
    public key. Pick the impostor and every check on the page still reports success: the exchange
-   completes, both sides match, the sizes are the published sizes. The verdict reads **"Same
-   secret on both sides — and Rae is not one of them."** There is no failure code for this,
-   because ML-KEM was never asked whose key it was.
+   completes, both sides match, the sizes are the published sizes. Three participants are drawn —
+   Dev, the key's actual owner holding the same bytes, and Rae holding nothing. The verdict reads
+   **"Same secret on both sides — and Rae is not one of them."** There is no failure code for
+   this, because ML-KEM was never asked whose key it was. And it is not a post-quantum
+   shortcoming: an unauthenticated X25519 exchange, exactly as shown in exhibit 1, has the same
+   hole for the same reason, which the panel says so a reader does not trade one misunderstanding
+   for another.
 
 6. **Recorded today, read later** — the harvest-now case in plain story form, with links out to
    [Harvest Timeline](https://systemslibrarian.github.io/crypto-lab-harvest-timeline/),
@@ -171,7 +187,7 @@ directory so a crash cannot strand an inverted condition in a file that also hol
 
 ## Build & Verify
 
-**49 unit tests** across five files, and **24 browser tests** across three Playwright projects.
+**49 unit tests** across five files, and **34 browser tests** across three Playwright projects.
 
 **Known-answer tests, with their provenance kept separate** — because "pinned from the
 specification" and "reproduced from a validated implementation" are not the same evidence, and
@@ -187,8 +203,12 @@ The decapsulation group is taken whole because five of its ten cases carry
 shared secret rather than an error. That is exhibit 4's claim, checked against the publication
 rather than against this lab's own behaviour.
 
-**The accessibility gate** (`e2e/a11y.spec.ts`) drives the lab through fourteen states and runs
+**The accessibility gate** (`e2e/a11y.spec.ts`) drives the lab through twenty-four states and runs
 nine oracles at each, at three viewport widths — 1280, 390, and 320, the width WCAG 1.4.10 names.
+Each of the eight disclosures is opened through its own `<summary>`, scanned, and shut again, then
+all eight are scanned open at once; the shut state is scanned too, because it is the one every
+reader arrives at. Panel 3 is driven from the keyboard rather than by clicking, because its one
+defect was a keyboard defect that clicking could not see.
 Beyond axe's WCAG A/AA rules it asserts axe's `incomplete` bucket, computes text contrast
 arithmetically (including inside `aria-hidden` subtrees, which both axe and the default walk
 skip), measures non-text contrast and generated content against a ratcheted baseline, and checks
@@ -203,7 +223,7 @@ behaviour, the §4.1d negative claim with its evidence fixture, and the brief's 
 that no sentence calls PQC stronger, and that the hidden maths words appear only in the one
 sentence pointing at Lattice Gentle.
 
-**Mutation discipline** (`scripts/mutate.mjs`, `e2e/verdict-mutations.json`). Seven recorded
+**Mutation discipline** (`scripts/mutate.mjs`, `e2e/verdict-mutations.json`). Eight recorded
 mutations cover all five verdict markers. Each is a concrete patch — file, an anchor that must
 occur exactly once, and its replacement — never a sentence describing an edit. The runner
 applies each in an isolated `git archive HEAD` tree and enforces four rules before calling
