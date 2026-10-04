@@ -269,6 +269,49 @@ const NOT_A_KILL = [
 const notAKill = (output) =>
   NOT_A_KILL.find(({ pattern }) => pattern.test(strip(output)))?.label ?? null
 
+/**
+ * Nothing may be left listening on the port between phases.
+ *
+ * This loop starts a preview server per phase, twenty-odd times in a full run, and a
+ * Playwright teardown that does not complete leaves one alive. The next phase then
+ * finds the port answering: `reuseExistingServer` is false under CI=1 so vite logs
+ * "Port 4212 is already in use" and exits, and the suite proceeds against THE
+ * PREVIOUS PHASE'S BUNDLE. That is the worst failure this harness has, because it is
+ * silent and it inverts the answer -- a mutated phase judged against the unmutated
+ * dist reports SURVIVED, and an unmutated phase judged against a mutated one reports
+ * a baseline that does not pass. Both were observed.
+ *
+ * Narrow by construction: `main()` refuses to start at all if the port is already
+ * held, so any listener found from here on was started by this loop and is ours to
+ * stop. It is a pid-targeted kill, never a pattern -- a `pkill -f "vite preview"`
+ * reaches into every sibling lab on this machine, which is how the flakes that
+ * started this investigation were caused.
+ */
+function ensurePortFree(label) {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    let pids = ''
+    try {
+      pids = execSync(`lsof -nP -iTCP:${PORT} -sTCP:LISTEN -t`, { encoding: 'utf8' }).trim()
+    } catch {
+      return // lsof exits non-zero when nothing matches
+    }
+    if (!pids) return
+    for (const pid of pids.split('\n').filter(Boolean)) {
+      console.log(`  (${label}: stopping our leftover preview on ${PORT}, pid ${pid})`)
+      try {
+        execSync(`kill ${pid}`)
+      } catch {
+        /* already gone */
+      }
+    }
+    execSync('sleep 1')
+  }
+  throw new Error(
+    `port ${PORT} is still held after ten attempts to release it; refusing to judge a ` +
+      'phase that would be served by someone else\'s bundle',
+  )
+}
+
 /* The WHOLE claims and coverage suite, never a `-g` on one test.
  *
  * e2e/global-teardown.ts fails the run when any recorded kill in
@@ -277,12 +320,15 @@ const notAKill = (output) =>
  * CANNOT exit 0 here: the named test passes and the teardown fails on every other
  * record. So the suite runs whole, once per phase, and the per-test answer is read
  * out of the reporter. */
-function runSuite() {
+function runSuite(label = 'phase') {
+  ensurePortFree(`before ${label}`)
   const cmd = 'npx playwright test --project=claims --project=coverage --reporter=list --retries=0'
   try {
     return { failed: false, output: sh(cmd) }
   } catch (err) {
     return { failed: true, output: `${err.stdout ?? ''}${err.stderr ?? ''}` }
+  } finally {
+    ensurePortFree(`after ${label}`)
   }
 }
 
@@ -313,7 +359,7 @@ const baselineHash = bundleHash()
 console.log(`baseline bundle ${baselineHash}\n`)
 
 console.log('running the unmutated baseline suite...')
-const baseline = runSuite()
+const baseline = runSuite('baseline')
 if (baseline.failed) {
   console.error('The unmutated suite does not pass in the isolated tree. Nothing below would mean')
   console.error('anything: a mutation "caught" by an already-red suite is caught by nothing.\n')
@@ -335,7 +381,7 @@ for (const id of ids) {
     apply(entry, true)
     const built = build()
     const mutatedHash = built ? bundleHash() : null
-    let mutated = built ? runSuite() : { failed: false, output: '' }
+    let mutated = built ? runSuite(id) : { failed: false, output: '' }
 
     /* ONE RETRY, AND ONLY FOR AN INFRASTRUCTURE SHAPE.
      *
@@ -360,7 +406,7 @@ for (const id of ids) {
     let retried = false
     if (built && notAKill(mutated.output)) {
       retried = true
-      mutated = runSuite()
+      mutated = runSuite(`${id} retry`)
     }
     const failed = built ? failingTitles(mutated.output) : []
     const runs = markers.map(([marker, k]) => [
@@ -421,6 +467,7 @@ for (const id of ids) {
   }
 }
 
+ensurePortFree('after the last phase')
 rmSync(TREE, { recursive: true, force: true })
 
 /* ---- the evidence, written by the thing that ran it ---------------------- */
