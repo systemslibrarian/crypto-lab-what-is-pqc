@@ -25,8 +25,10 @@ import type { Page } from '@playwright/test';
  *
  * The generated-content half is live because `.link-list li::before` and
  * `.honesty-list li::before` draw this page's list bullets as a 1px dash in
- * `--border-strong` — nine of them. A pseudo-element is not an element, so
- * `contrast.ts` cannot see them and neither can axe.
+ * `--border-strong`. A pseudo-element is not an element, so `contrast.ts` cannot
+ * see them and neither can axe. The `<summary>` disclosure triangles are NOT in
+ * that set: those are `::marker`, the UA's own, which is why this page declares no
+ * author `content` for them and has nothing to baseline.
  *
  * TWO SEPARATE CHECKS LIVE HERE.
  *

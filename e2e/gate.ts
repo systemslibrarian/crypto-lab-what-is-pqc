@@ -314,12 +314,20 @@ export async function boot(page: Page): Promise<void> {
   ).toHaveCount(0);
   await expect(page.locator('#cl-theme-toggle')).toHaveCount(0);
 
-  // ── Nothing on this page is hidden, and nothing is behind a disclosure ────
-  // All five panels are on one scrolling document. Asserting both at zero is what
-  // makes the drive's coverage claim checkable: there is no state a reader can
-  // reach that the drive has to remember to open.
+  // ── Nothing uses the [hidden] attribute; the disclosures all ship SHUT ────
+  // All five panels are on one scrolling document -- no tabs -- so no panel is ever
+  // hidden. The long-form half of each panel is behind a <details>, and every one
+  // of them arrives closed, which is the state a reader meets and therefore the
+  // state the arrival scan has to be scanning. The gate this fleet replaced opened
+  // every <details> from script before its only scan, so the shut rendering -- the
+  // one every reader sees -- was never measured at all.
   await expect(page.locator('#app [hidden]')).toHaveCount(0);
-  await expect(page.locator('#app details')).toHaveCount(0);
+  await expect(page.locator('#app details')).toHaveCount(8);
+  await expect(page.locator('#app details[open]')).toHaveCount(0);
+  // Every disclosure is a real <summary>, so it is keyboard-operable and announced
+  // as a disclosure with no ARIA at all. A <div> with a click handler would be
+  // neither, and would pass an axe run.
+  await expect(page.locator('#app details > summary')).toHaveCount(8);
 
   // ── Every panel rendered, and none of them is empty ───────────────────────
   for (const id of [
@@ -812,6 +820,44 @@ export async function driveAllStates(page: Page, label: string): Promise<void> {
   await page.keyboard.press('Tab');
   await expect(page.locator('a.cl-skip-link')).toBeFocused();
   await scanAt('the shared skip link focused, slid in from top:-3rem');
+
+  // ── Every disclosure, opened through its own summary ──────────────────────
+  //
+  // Through the SUMMARY, one at a time, which is the route a reader has -- never by
+  // setting `.open` from script, and never all at once. Both shortcuts produce a
+  // rendering no reader reaches, and the second one additionally destroys the
+  // ability to scan the shut state, which is the state everybody actually meets.
+  //
+  // A closed <details> hides its body with `content-visibility: hidden` rather than
+  // `display: none`, and Chromium keeps the last laid-out geometry for that subtree,
+  // so the usual rect and `display` tests all pass for text that paints nothing.
+  // `contrast.ts` uses `checkVisibility()` for exactly that reason -- which means
+  // the content inside these is measured only once it is genuinely open.
+  const summaries = page.locator('#app details > summary');
+  const disclosureCount = await summaries.count();
+  for (let i = 0; i < disclosureCount; i++) {
+    const summary = summaries.nth(i);
+    const label = (await summary.innerText()).trim().slice(0, 48);
+    await summary.click();
+    await expect(summary.locator('xpath=..')).toHaveAttribute('open', '');
+    await scanAt(`disclosure open: ${label}`);
+    await summary.click();
+    await expect(page.locator('#app details[open]')).toHaveCount(0);
+  }
+
+  // All of them open at once is NOT a reader's state, but it is the state in which
+  // every token inside every disclosure is painted simultaneously -- the cheapest
+  // way to be sure the scan above missed nothing to a one-at-a-time ordering.
+  for (let i = 0; i < disclosureCount; i++) await summaries.nth(i).click();
+  await expect(page.locator('#app details[open]')).toHaveCount(disclosureCount);
+  await scanAt('every disclosure open at once');
+  for (let i = 0; i < disclosureCount; i++) await summaries.nth(i).click();
+  await expect(page.locator('#app details[open]')).toHaveCount(0);
+
+  // ── The first action on the page, focused ─────────────────────────────────
+  await page.locator('#start-here').focus();
+  await expect(page.locator('#start-here')).toBeFocused();
+  await scanAt('the intro\'s primary action focused');
 
   // ── Panel 1 re-run. Also the no-op guard: this must NOT retire panel 3 ────
   await page.locator('#classical-run').click();

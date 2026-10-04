@@ -15,12 +15,24 @@ import {
  * WCAG 2.1 A/AA regression gate.
  *
  * The lab is driven along everything it teaches: the arrival state with both
- * exchanges already run; the shared skip link focused; panel 1 and panel 2
- * re-run; panel 3 untouched, broken, put back, broken again and then retired by a
- * fresh run of panel 2; panel 4 on the honest key, on the impostor fixture, and
- * with the impostor radio focused inside that alarm-toned region; a primary button
- * and a shared top bar control hovered; a button and an outbound link focused.
- * Fourteen states, each scanned by nine oracles, at three widths.
+ * exchanges already run and every disclosure shut; the shared skip link focused;
+ * each of the eight disclosures opened through its own `<summary>` and shut again,
+ * then all eight open at once; the intro's primary action focused; panel 1 and
+ * panel 2 re-run; panel 3 untouched, broken, put back, broken again and then
+ * retired by a fresh run of panel 2 — driven from the KEYBOARD, because this
+ * panel's defect was a keyboard defect; panel 4 on the honest key, on the impostor
+ * fixture, and with the impostor radio focused inside that alarm-toned region; a
+ * primary button and a shared top bar control hovered; a button and an outbound
+ * link focused. Twenty-four states, each scanned by nine oracles, at three widths.
+ *
+ * THE DISCLOSURES ARE OPENED THROUGH THEIR SUMMARIES, one at a time, and the shut
+ * state is scanned too. The fleet gate this replaces stripped every `[hidden]` and
+ * set every `<details>.open` from script before its only scan, which measures a
+ * rendering no reader can reach and never measures the one every reader arrives at.
+ * That the content inside them is genuinely measured was checked rather than
+ * assumed: degrading a colour used ONLY inside a closed disclosure
+ * (`.glossary dd`) made this gate fail naming `.glossary > dd:nth-child(2)`, with
+ * the build still succeeding.
  *
  * THREE WIDTHS, AND THE THIRD IS THE ONE THAT MATTERS. 1280 is desktop. 390 is a
  * current phone, which is where most readers of a beginner on-ramp will actually

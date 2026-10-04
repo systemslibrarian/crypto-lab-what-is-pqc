@@ -50,6 +50,21 @@ test.beforeAll(() => {
   recordClaimsProjectRan()
 })
 
+/**
+ * Every word on the page, disclosures included.
+ *
+ * `innerText` reports what is RENDERED, and a closed `<details>` renders only its
+ * summary — so a copy rule checked against the arrival text would silently stop
+ * covering everything a reader can open. The brief's two hard rules are rules about
+ * the whole page, so the whole page has to be read: open every disclosure, then ask.
+ */
+async function fullText(page: Page): Promise<string> {
+  await page.evaluate(() => {
+    for (const d of document.querySelectorAll('#app details')) (d as HTMLDetailsElement).open = true
+  })
+  return page.locator('#app').innerText()
+}
+
 /** "2,272 bytes" -> 2272. Reads what a reader reads, not an attribute. */
 function bytesFromText(text: string): number {
   const match = /([\d,]+)\s*bytes/.exec(text)
@@ -441,7 +456,7 @@ test.describe("the brief's hard rules, as tests", () => {
     // carry its own negation, because a reader who skims one sentence out of
     // context is exactly the reader this rule exists for. Checked over the driven
     // page, not the static HTML, so generated verdict text is included.
-    const text = await page.locator('#app').innerText()
+    const text = await fullText(page)
     const sentences = text.split(/(?<=[.!?])\s+/)
     const offending = sentences
       .filter((s) => /\bstronger?\b/i.test(s))
@@ -469,7 +484,7 @@ test.describe("the brief's hard rules, as tests", () => {
     // The brief forbids lattice, LWE, polynomial, ring and NTT anywhere on the page
     // except one sentence pointing at the lab that teaches them. This is a
     // Beginner lab and that boundary is the reason it can be one.
-    const text = await page.locator('#app').innerText()
+    const text = await fullText(page)
     for (const word of [/\bLWE\b/i, /\bpolynomials?\b/i, /\brings?\b/i, /\bNTT\b/i]) {
       expect(word.test(text), `${word} must not appear on the page`).toBe(false)
     }
@@ -495,6 +510,7 @@ test.describe("the brief's hard rules, as tests", () => {
     // fewer, so attributing them to the size increase is backwards. The sentence
     // that got this wrong linked Downgrade Wire and then drew the wrong conclusion
     // from it, which is the shape of a plausible-sounding falsehood.
+    await fullText(page)
     const sizes = page.locator('#panel-sizes')
     await expect(sizes).toContainText("It is not why today's deployments run both exchanges")
     await expect(sizes).toContainText('a hedge against being wrong, not a fix for the size')
@@ -529,7 +545,7 @@ test.describe("the brief's hard rules, as tests", () => {
     await boot(page)
     // Quantum computers exist. What does not exist is one big enough to undo
     // X25519, and the page has to say which it means.
-    const text = await page.locator('#app').innerText()
+    const text = await fullText(page)
     expect(text).toContain('Quantum computers exist')
     expect(text).not.toMatch(/computer that does not exist yet/i)
   })
@@ -544,10 +560,56 @@ test.describe("the brief's hard rules, as tests", () => {
     // The provenance distinction the repository keeps: NIST's ACVP vectors for
     // ML-KEM and RFC 7748's own worked example for X25519 are different kinds of
     // evidence, and the page says so rather than calling both "spec vectors".
+    await fullText(page)
     await expect(honesty).toContainText("NIST's\npublished ACVP test vectors")
     await expect(honesty).toContainText('RFC 7748')
     await expect(honesty).toContainText('Nothing here breaks X25519')
     await expect(honesty).toContainText('nothing here runs a quantum algorithm')
+  })
+})
+
+test.describe('the disclosure boundary', () => {
+  test('the disclosures ship shut, and open through a real summary', async ({ page }) => {
+    await boot(page)
+    const summaries = page.locator('#app details > summary')
+    const count = await summaries.count()
+    expect(count).toBeGreaterThan(0)
+    await expect(page.locator('#app details[open]')).toHaveCount(0)
+    // Keyboard-operable with no ARIA, because it is a real <summary>.
+    await summaries.first().focus()
+    await page.keyboard.press('Enter')
+    await expect(page.locator('#app details[open]')).toHaveCount(1)
+  })
+
+  test('nothing load-bearing is hidden behind a disclosure', async ({ page }) => {
+    await boot(page)
+    // Progressive disclosure must not hide the qualifications that make an exhibit
+    // truthful. These four are the ones that may never move behind a summary:
+    // the brief's one hard rule, the teaching-demo line, the scope of the quantum
+    // claim, and §4.1d's negative claim. Asserting they are VISIBLE at arrival is
+    // the check; asserting they have no <details> ancestor is why it cannot be
+    // satisfied by a disclosure that happens to be open.
+    const loadBearing: readonly [string, string][] = [
+      ['.callout-rule', 'the "not a stronger lock" rule'],
+      ['.honesty-lead', 'the teaching-demo line'],
+      ['[data-limitation="authentication"]', "§4.1d's negative claim"],
+    ]
+    for (const [selector, what] of loadBearing) {
+      const el = page.locator(selector)
+      await expect(el, `${what} must be on the page`).toHaveCount(1)
+      await expect(el, `${what} must be visible at arrival`).toBeVisible()
+      expect(
+        await el.evaluate((node) => node.closest('details') !== null),
+        `${what} must not be behind a disclosure`,
+      ).toBe(false)
+    }
+    // And the quantum scoping, which is prose rather than a component.
+    await expect(page.locator('#panel-intro')).toContainText('Quantum computers exist')
+    expect(
+      await page
+        .locator('#panel-intro')
+        .evaluate((node) => node.querySelector('details')?.textContent?.includes('Quantum computers exist') ?? false),
+    ).toBe(false)
   })
 })
 

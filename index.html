@@ -163,10 +163,10 @@
         <aside class="cl-hero-why" aria-label="Why it matters">
           <span class="cl-hero-why-label">WHY IT MATTERS</span>
           <p class="cl-hero-why-text">
-            "Post-quantum" gets read as "stronger", and that is not what changed. It is a lock
-            built on a different hard problem, because the problem today's keys use has a known
-            quantum solution. It is the most common misunderstanding about the subject, and acting
-            on it leads people to migrate the wrong things in the wrong order.
+            Someone can record an encrypted conversation today and keep it for years. If a machine
+            that can undo today's key exchange is ever built, information that still matters — a
+            medical record, a confidential source's name — becomes readable, and the decision that
+            protected it was made the day the connection opened.
           </p>
         </aside>
       </div>
@@ -179,6 +179,18 @@
             one you are reading this on will do both halves of this page in a few milliseconds.
             The "quantum" in the name is the attacker it is built against, not the machine it
             needs.
+          </p>
+          <div class="callout callout-rule">
+            <span class="callout-icon" aria-hidden="true">!</span>
+            <p>
+              <strong>It is not a stronger lock.</strong> It is a lock built on a different
+              problem. Nothing on this page will tell you post-quantum cryptography is stronger,
+              because that is not what changed — and it is the single most common thing people get
+              wrong about it.
+            </p>
+          </div>
+          <p class="start-row">
+            <a class="btn btn-primary" id="start-here" href="#panel-classical">Start with the first exchange</a>
           </p>
           <p>
             When two people want to keep something private, they first have to agree on a
@@ -195,20 +207,32 @@
             <em>different</em> hard problem — one that machine is not expected to help with. Those
             are what "post-quantum" means.
           </p>
-          <div class="callout callout-rule">
-            <span class="callout-icon" aria-hidden="true">!</span>
-            <p>
-              <strong>It is not a stronger lock.</strong> It is a lock built on a different
-              problem. Nothing on this page will tell you post-quantum cryptography is stronger,
-              because that is not what changed — and it is the single most common thing people get
-              wrong about it.
+          <details class="learn-more">
+            <summary>What the four panels below do, and the words they use</summary>
+            <p class="intro-plan">
+              The same job done twice — once the way it is done today, once the post-quantum way,
+              with real cryptography both times. Then the one thing that measurably changed, one
+              byte broken on purpose, and one thing neither method does for you.
             </p>
-          </div>
-          <p class="intro-plan">
-            Below: the same job done twice, once the way it is done today and once the post-quantum
-            way, with real cryptography both times. Then the one thing that measurably changed, one
-            byte broken on purpose, and one thing neither method does for you.
-          </p>
+            <dl class="glossary">
+              <dt>Shared secret</dt>
+              <dd>
+                Bytes both participants end up holding. Not the message: an application derives the
+                keys that protect the conversation from it.
+              </dd>
+              <dt>Public key</dt>
+              <dd>Something you may hand to anyone, and that an observer may copy.</dd>
+              <dt>Ciphertext</dt>
+              <dd>
+                Here, ML-KEM's public reply — the "sealed box". It is how both sides arrive at the
+                shared secret. It is not the conversation.
+              </dd>
+              <dt>Byte</dt>
+              <dd>A unit of size. Nothing on this page asks you to do binary arithmetic.</dd>
+              <dt>Authentication</dt>
+              <dd>Checking <em>who</em> you are talking to. A separate job — see panel 4.</dd>
+            </dl>
+          </details>
         </section>
 
         <!-- Panels 1 and 2 are deliberately symmetrical: same markup, same
@@ -218,7 +242,7 @@
              making the claim this lab exists to refuse. -->
         <section class="card exchange" id="panel-classical" aria-labelledby="classical-title">
           <div class="panel-head">
-            <p class="panel-step">Panel 1</p>
+            <p class="panel-step">Panel 1 · Classical method · X25519</p>
             <h2 id="classical-title">Two people agree on a secret, in the open</h2>
           </div>
           <p class="panel-lede">
@@ -233,22 +257,26 @@
           <div class="panel-after">
             <p>
               <strong>Here is the part that matters.</strong> Everything an eavesdropper needs is
-              in the two values above — they crossed the wire in the clear. Today, having those
-              two values does not get you the secret. A quantum computer large enough to work it
-              out from them is expected to be able to. No such machine has been built, and the
-              reason it would work is not that it tries every possibility faster: the particular
-              problem this method rests on turns out to have a quantum shortcut.
+              in the two values above — they crossed the wire in the clear. Today, having them does
+              not get you the secret. A quantum computer large enough to work it out from them is
+              expected to be able to; no such machine has been built.
             </p>
-            <p class="panel-link">
-              That shortcut has a name and a mechanism, and it is a lab of its own:
-              <a href="https://systemslibrarian.github.io/crypto-lab-shor/" target="_blank" rel="noopener noreferrer">Shor</a>.
-            </p>
+            <details class="learn-more">
+              <summary>Why a quantum computer would help here</summary>
+              <p>
+                Not because it tries every possibility faster. The particular problem this method
+                rests on turns out to have a quantum shortcut — a way to get the answer directly
+                rather than by searching. That shortcut has a name and a mechanism, and it is a lab
+                of its own:
+                <a href="https://systemslibrarian.github.io/crypto-lab-shor/" target="_blank" rel="noopener noreferrer">Shor</a>.
+              </p>
+            </details>
           </div>
         </section>
 
         <section class="card exchange" id="panel-pq" aria-labelledby="pq-title">
           <div class="panel-head">
-            <p class="panel-step">Panel 2</p>
+            <p class="panel-step">Panel 2 · Post-quantum method · ML-KEM-768</p>
             <h2 id="pq-title">The same thing, on a different hard problem</h2>
           </div>
           <p class="panel-lede">
@@ -273,12 +301,15 @@
               rests on. That is the whole change. The secret is the same size, the two sides still
               match, and the job is the same job.
             </p>
-            <p>
-              The bytes above are not the bytes in panel 1, and they are not meant to be. These
-              are two separate exchanges run independently; each one agrees with <em>itself</em>,
-              which is the only thing either is trying to do. Two methods reaching the same secret
-              as each other would be a bug, not a feature.
-            </p>
+            <details class="learn-more">
+              <summary>Why these bytes are not panel 1's bytes</summary>
+              <p>
+                They are not meant to be. These are two separate exchanges run independently; each
+                one agrees with <em>itself</em>, which is the only thing either is trying to do. Two
+                different methods reaching the same secret as each other would be a bug, not a
+                feature.
+              </p>
+            </details>
           </div>
         </section>
 
@@ -299,12 +330,15 @@
             is the subject of
             <a href="https://systemslibrarian.github.io/crypto-lab-downgrade-wire/" target="_blank" rel="noopener noreferrer">Downgrade Wire</a>.
           </p>
-          <p class="panel-note">
-            It is <em>not</em> why today's deployments run both exchanges together. They do that to
-            avoid betting everything on one assumption: ML-KEM is new, and if a weakness were found
-            in it, a session that also ran X25519 has not been lost. Running both costs more bytes
-            rather than saving them — it is a hedge against being wrong, not a fix for the size.
-          </p>
+          <details class="learn-more">
+            <summary>It is not why today's deployments run both exchanges together</summary>
+            <p>
+              They do that to avoid betting everything on one assumption: ML-KEM is new, and if a
+              weakness were found in it, a session that also ran X25519 has not been lost. Running
+              both costs more bytes rather than saving them — it is a hedge against being wrong, not
+              a fix for the size.
+            </p>
+          </details>
         </section>
 
         <section class="card" id="panel-break" aria-labelledby="break-title">
@@ -324,15 +358,17 @@
               perfectly well-formed secret that simply is not Dev's. The standard specifies that
               behaviour rather than an error.
             </p>
-            <p>
-              A complete protocol <em>can</em> catch this, and not by mailing the secrets to each
-              other to compare — that would hand them to the eavesdropper. It catches it the next
-              time the secret is used: each side sends a short value computed <em>with</em> the key
-              (key confirmation), or the first real message carries an authentication tag the other
-              side checks. Disagreeing keys fail that check immediately. What this panel shows is
-              that the failure surfaces one layer up, and software that skips that layer never
-              hears about it.
-            </p>
+            <details class="learn-more">
+              <summary>So how does real software catch it?</summary>
+              <p>
+                Not by mailing the secrets to each other to compare — that would hand them to the
+                eavesdropper. It catches it the next time the secret is used: each side sends a
+                short value computed <em>with</em> the key (key confirmation), or the first real
+                message carries an authentication tag the other side checks. Disagreeing keys fail
+                that check immediately. What this panel shows is that the failure surfaces one
+                layer up, and software that skips that layer never hears about it.
+              </p>
+            </details>
             <p class="panel-link">
               What goes wrong when real software forgets to check, in depth:
               <a href="https://systemslibrarian.github.io/crypto-lab-kem-trap/" target="_blank" rel="noopener noreferrer">KEM Trap</a>.
@@ -371,13 +407,24 @@
             method protected them was made the day the connection opened.
           </p>
           <p>
-            That is the whole argument for moving before the machine arrives rather than after. It
-            only bites for information that still matters years from now — a medical record, the
-            identity of a confidential source, research data under embargo — which is also why
-            "migrate everything immediately" is the wrong answer. What you actually need to know is
-            which of your secrets have a long life.
+            That is the whole argument for moving before the machine arrives rather than after.
           </p>
-          <ul class="link-list" role="list">
+          <details class="learn-more">
+            <summary>Which secrets this actually applies to</summary>
+            <p>
+              It only bites for information that still matters years from now — a medical record,
+              the identity of a confidential source, research data under embargo — which is also
+              why "migrate everything immediately" is the wrong answer. What you actually need to
+              know is which of your secrets have a long life.
+            </p>
+          </details>
+          <details class="learn-more">
+            <summary>Where to go next, if you want to</summary>
+            <p class="panel-note">
+              You can stop here. The four panels above are the whole lesson; everything below is
+              somebody else's lab.
+            </p>
+            <ul class="link-list" role="list">
             <li role="listitem">
               <a href="https://systemslibrarian.github.io/crypto-lab-harvest-timeline/" target="_blank" rel="noopener noreferrer">Harvest Timeline</a>
               — how long you have, as arithmetic on three numbers.
@@ -393,8 +440,9 @@
             <li role="listitem">
               <a href="https://systemslibrarian.github.io/crypto-lab-kyber-vault/" target="_blank" rel="noopener noreferrer">Kyber Vault</a>
               — this same ML-KEM, taken apart properly.
-            </li>
-          </ul>
+              </li>
+            </ul>
+          </details>
         </section>
 
         <section class="card honesty" id="panel-honesty" aria-labelledby="honesty-title">
@@ -405,19 +453,8 @@
           </p>
           <ul class="honesty-list" role="list">
             <li role="listitem">
-              <strong>Real.</strong> Every byte on this page comes from a published
-              implementation of a published standard: ML-KEM-768 from FIPS 203, and X25519 from
-              RFC 7748. Nothing is simulated, approximated or drawn to look right.
-            </li>
-            <li role="listitem">
-              <strong>Checked.</strong> The ML-KEM-768 figures are checked against NIST's
-              published ACVP test vectors and the X25519 ones against RFC 7748's own worked
-              example, with the difference between those two kinds of evidence written down in
-              the repository rather than blurred together.
-            </li>
-            <li role="listitem">
               <strong>Not shown.</strong> Nothing here breaks X25519, and nothing here runs a
-              quantum algorithm. "A future machine could undo panel 1" is a statement about a
+              quantum algorithm. "A large enough machine could undo panel 1" is a statement about a
               known result, linked rather than demonstrated.
             </li>
             <li role="listitem">
@@ -425,13 +462,29 @@
               shown is that it does the same job, at a different size, on a problem the known
               quantum shortcut does not apply to.
             </li>
-            <li role="listitem">
-              <strong>Deliberately left out.</strong> How ML-KEM works inside. This page is the
-              door, not the building, and the maths underneath is a lab of its own:
-              <a href="https://systemslibrarian.github.io/crypto-lab-lattice-gentle/" target="_blank" rel="noopener noreferrer">Lattice Gentle</a>
-              builds up the lattice problem by hand, from nothing.
-            </li>
           </ul>
+          <details class="learn-more">
+            <summary>What is real, how it is checked, and what is left out</summary>
+            <ul class="honesty-list" role="list">
+              <li role="listitem">
+                <strong>Real.</strong> Every byte on this page comes from a published implementation
+                of a published standard: ML-KEM-768 from FIPS 203, and X25519 from RFC 7748. Nothing
+                is simulated, approximated or drawn to look right.
+              </li>
+              <li role="listitem">
+                <strong>Checked.</strong> The ML-KEM-768 figures are checked against NIST's
+                published ACVP test vectors and the X25519 ones against RFC 7748's own worked
+                example, with the difference between those two kinds of evidence written down in the
+                repository rather than blurred together.
+              </li>
+              <li role="listitem">
+                <strong>Deliberately left out.</strong> How ML-KEM works inside. This page is the
+                door, not the building, and the maths underneath is a lab of its own:
+                <a href="https://systemslibrarian.github.io/crypto-lab-lattice-gentle/" target="_blank" rel="noopener noreferrer">Lattice Gentle</a>
+                builds up the lattice problem by hand, from nothing.
+              </li>
+            </ul>
+          </details>
         </section>
       </main>
 

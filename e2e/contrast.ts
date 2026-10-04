@@ -532,12 +532,11 @@ export async function auditContrast(
       // A closed <details> hides its body with `content-visibility: hidden`,
       // not `display: none`, and Chromium keeps the last laid-out geometry for
       // that subtree — so the `display`/rect tests above all pass for text that
-      // paints nothing. `checkVisibility()` catches it. This page ships NO
-      // <details> — boot() asserts the count at zero, because a beginner on-ramp
-      // that hides its content behind disclosures is not an on-ramp — so the
-      // shape cannot occur here today. The guard stays because it is free, and
-      // because the first disclosure added would otherwise be scanned in a state
-      // it never renders in.
+      // paints nothing. `checkVisibility()` catches it. This page has eight
+      // <details> and every one ships SHUT, which makes this guard load-bearing
+      // rather than theoretical: without it the walk would measure the contrast of
+      // every "Learn more" body on the arrival scan, where none of it is painted.
+      // `gate.ts` opens each one through its own <summary> and scans it then.
       if ((el as HTMLElement).checkVisibility?.() === false) return false;
       const r = rectOf(el);
       if (r.width <= 0 || r.height <= 0) return false;
