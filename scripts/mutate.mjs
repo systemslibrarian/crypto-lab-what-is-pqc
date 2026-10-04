@@ -297,7 +297,28 @@ for (const id of ids) {
     apply(entry, true)
     const built = build()
     const mutatedHash = built ? bundleHash() : null
-    const mutated = built ? runSuite() : { failed: false, output: '' }
+    let mutated = built ? runSuite() : { failed: false, output: '' }
+
+    /* ONE RETRY, AND ONLY FOR AN INFRASTRUCTURE SHAPE.
+     *
+     * A red run whose output says the page never loaded is not evidence either way,
+     * which is what rule 3's classifier is for -- but reporting NOT A KILL and
+     * stopping there makes a person re-run the whole loop and, worse, invites them to
+     * re-run it until it comes out green. Measured here: `vite preview --strictPort`
+     * is started and torn down once per phase, twenty-odd times in a full run, and
+     * macOS does not always have 4212 free by the time the next one asks for it. Two
+     * of ten mutations came back "nothing served on the port" in a single run.
+     *
+     * So the loop re-asks the question once. This does not weaken any of the four
+     * rules: the retry is triggered only by a shape that means the code never ran, a
+     * second infrastructure failure is still NOT A KILL rather than a kill, and the
+     * fact that a retry happened is written into the evidence so a reader can see it
+     * rather than having it smoothed away. */
+    let retried = false
+    if (built && notAKill(mutated.output)) {
+      retried = true
+      mutated = runSuite()
+    }
     const failed = built ? failingTitles(mutated.output) : []
     const runs = markers.map(([marker, k]) => [
       marker,
@@ -338,6 +359,7 @@ for (const id of ids) {
       markers: markers.map(([m]) => m),
       bundles: { baseline: baselineHash, mutated: mutatedHash, restored: restoredHash },
       failedTitles: failed,
+      retried,
     })
     console.log(
       verdict === 'KILLED'
@@ -371,6 +393,9 @@ for (const result of results) {
     baselineSuite: `${baselineCount} tests passed unmutated`,
     bundle: `${result.bundles.baseline} -> ${result.bundles.mutated ?? 'no build'} -> ${result.bundles.restored}`,
     failingTests: result.failedTitles,
+    // True when the first attempt went red for a reason that means the page never
+    // loaded, and the loop re-asked. Recorded rather than hidden.
+    retriedAfterInfrastructureFailure: result.retried,
     rules: {
       baselinePassed: true,
       fileChanged: true,
