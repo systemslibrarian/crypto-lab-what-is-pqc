@@ -429,19 +429,21 @@ for (const id of ids) {
       .filter(([m, r]) => r.failed && !strip(r.output).includes(m))
       .map(([m]) => m)
 
-    const verdict = !built
-      ? 'DOES NOT BUILD'
-      : mutatedHash === baselineHash
-        ? 'BUNDLE UNCHANGED'
-        : shapes.length
-          ? `NOT A KILL (${shapes[0]})`
-          : survived.length
-            ? `SURVIVED (${survived.join(', ')})`
-            : wrongName.length
-              ? `FAILED FOR THE WRONG REASON (${wrongName.join(', ')})`
-              : restoredHash !== baselineHash
-                ? 'NOT RESTORED'
-                : 'KILLED'
+    /* The order matters, and it is deliberately "everything that could make this
+       unreadable, THEN the result". `SURVIVED` is the branch reached when no failing
+       test can be named, so every reason a run might name none has to be excluded
+       before it -- otherwise the harness reports its most alarming verdict for a run
+       that did not happen. */
+    const verdict = (() => {
+      if (!built) return 'DOES NOT BUILD'
+      if (mutatedHash === baselineHash) return 'BUNDLE UNCHANGED'
+      if (shapes.length) return `NOT A KILL (${shapes[0]})`
+      if (unreadable) return `NOT A KILL (${unreadable})`
+      if (survived.length) return `SURVIVED (${survived.join(', ')})`
+      if (wrongName.length) return `FAILED FOR THE WRONG REASON (${wrongName.join(', ')})`
+      if (restoredHash !== baselineHash) return 'NOT RESTORED'
+      return 'KILLED'
+    })()
     results.push({
       id,
       verdict,
