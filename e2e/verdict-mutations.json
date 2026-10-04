@@ -17,10 +17,33 @@
      "test": "panel 1 concludes what the two secrets it printed actually show",
      "claim": {
       "absent": "stronger",
-      "contains": ["<hex16>", "<hex16>", "32 bytes"],
+      "contains": [
+       "<hex16>",
+       "<hex16>",
+       "32 bytes"
+      ],
       "text": "Same secret on both sides",
       "tone": "pass"
      }
+    }
+   },
+   "observed": {
+    "at": "2026-10-04T20:41:37.978Z",
+    "sha": "edf7afae19cd7abea97d1636ba43f43e1c88a0c3",
+    "verdict": "KILLED",
+    "baselineSuite": "21 tests passed unmutated",
+    "bundle": "8508a669997a -> 17208fbeeaf4 -> 8508a669997a",
+    "failingTests": [
+     "[claims] › e2e/claims.spec.ts:72:3 › the two exchanges › panel 1 concludes what the two secrets it printed actually show",
+     "[claims] › e2e/claims.spec.ts:100:3 › the two exchanges › the two panels agree on the one thing that did not change",
+     "[claims] › e2e/claims.spec.ts:113:3 › the size comparison › the growth factor is the quotient of the two totals on screen",
+     "[claims] › e2e/claims.spec.ts:236:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the fixture is reachable, and in it every check the page makes reports success"
+    ],
+    "rules": {
+     "baselinePassed": true,
+     "fileChanged": true,
+     "servedMutatedCode": true,
+     "namedTestFailed": true
     }
    }
   },
@@ -34,10 +57,33 @@
      "test": "panel 2 concludes what the two secrets it printed actually show",
      "claim": {
       "absent": "stronger",
-      "contains": ["<hex16>", "<hex16>", "32 bytes"],
+      "contains": [
+       "<hex16>",
+       "<hex16>",
+       "32 bytes"
+      ],
       "text": "Same secret on both sides",
       "tone": "pass"
      }
+    }
+   },
+   "observed": {
+    "at": "2026-10-04T20:41:37.978Z",
+    "sha": "edf7afae19cd7abea97d1636ba43f43e1c88a0c3",
+    "verdict": "KILLED",
+    "baselineSuite": "21 tests passed unmutated",
+    "bundle": "8508a669997a -> 4c1483ce60ef -> 8508a669997a",
+    "failingTests": [
+     "[claims] › e2e/claims.spec.ts:88:3 › the two exchanges › panel 2 concludes what the two secrets it printed actually show",
+     "[claims] › e2e/claims.spec.ts:100:3 › the two exchanges › the two panels agree on the one thing that did not change",
+     "[claims] › e2e/claims.spec.ts:113:3 › the size comparison › the growth factor is the quotient of the two totals on screen",
+     "[claims] › e2e/claims.spec.ts:236:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the fixture is reachable, and in it every check the page makes reports success"
+    ],
+    "rules": {
+     "baselinePassed": true,
+     "fileChanged": true,
+     "servedMutatedCode": true,
+     "namedTestFailed": true
     }
    }
   },
@@ -51,9 +97,28 @@
      "test": "the growth factor is the quotient of the two totals on screen",
      "claim": {
       "absent": "stronger",
-      "contains": ["Bigger by 35.5 times", "2,272"],
+      "contains": [
+       "Bigger by 35.5 times",
+       "2,272"
+      ],
       "tone": "pass"
      }
+    }
+   },
+   "observed": {
+    "at": "2026-10-04T20:41:37.978Z",
+    "sha": "edf7afae19cd7abea97d1636ba43f43e1c88a0c3",
+    "verdict": "KILLED",
+    "baselineSuite": "21 tests passed unmutated",
+    "bundle": "8508a669997a -> 667656434412 -> 8508a669997a",
+    "failingTests": [
+     "[claims] › e2e/claims.spec.ts:113:3 › the size comparison › the growth factor is the quotient of the two totals on screen"
+    ],
+    "rules": {
+     "baselinePassed": true,
+     "fileChanged": true,
+     "servedMutatedCode": true,
+     "namedTestFailed": true
     }
    }
   },
@@ -66,26 +131,68 @@
     "byte-flip": {
      "test": "changing one byte leaves two different secrets and no reported failure",
      "claim": {
-      "contains": ["No error was raised and no exception was thrown", "32 bytes"],
+      "contains": [
+       "No error was raised and no exception was thrown",
+       "32 bytes"
+      ],
       "text": "Different secrets — and nothing reported a failure",
       "tone": "trap"
      }
+    }
+   },
+   "observed": {
+    "at": "2026-10-04T20:41:37.978Z",
+    "sha": "edf7afae19cd7abea97d1636ba43f43e1c88a0c3",
+    "verdict": "KILLED",
+    "baselineSuite": "21 tests passed unmutated",
+    "bundle": "8508a669997a -> 2aba783b5853 -> 8508a669997a",
+    "failingTests": [
+     "[claims] › e2e/claims.spec.ts:178:3 › breaking one byte › changing one byte leaves two different secrets and no reported failure",
+     "[claims] › e2e/claims.spec.ts:199:3 › breaking one byte › re-running panel 2 retires the broken result and says it was retired",
+     "[claims] › e2e/claims.spec.ts:214:3 › breaking one byte › re-running panel 1 does NOT retire a fresh broken result"
+    ],
+    "rules": {
+     "baselinePassed": true,
+     "fileChanged": true,
+     "servedMutatedCode": true,
+     "namedTestFailed": true
     }
    }
   },
   "impostor-uses-raes-key": {
    "file": "src/exchange/mlkem.ts",
-   "find": "  const owner = impostor ? mal : rae",
-   "replace": "  const owner = impostor ? rae : rae",
-   "why": "This breaks a check INSIDE the negative claim's evidence fixture, which section 4.1d requires: with the impostor branch quietly using Rae's own key, the exchange really does reach Rae and the fixture is no longer evidence of anything. The verdict is computed from the MEASURED raeHoldsTheSecret rather than from the option the reader picked, which is the only reason this is visible on the page at all.",
+   "find": "  const mal = ml_kem768.keygen()",
+   "replace": "  const mal = rae",
+   "why": "This breaks a check INSIDE the negative claim's evidence fixture, which section 4.1d requires: with the impostor's key pair quietly being Rae's own, the exchange really does reach Rae and the fixture is no longer evidence of anything. The verdict is computed from the MEASURED raeHoldsTheSecret rather than from the option the reader picked, which is the only reason this is visible on the page at all. The patch rebinds `mal` rather than rewriting the ternary that reads it: `impostor ? rae : rae` leaves `mal` unused and noUnusedLocals makes that DOES NOT BUILD, which proves nothing -- the first version of this record was exactly that, and the runner said so.",
    "kills": {
     "key-owner": {
      "test": "the fixture is reachable, and in it every check the page makes reports success",
      "claim": {
-      "contains": ["Every check on this page passed", "1,184 bytes", "1,088 bytes"],
+      "contains": [
+       "Every check on this page passed",
+       "1,184 bytes",
+       "1,088 bytes"
+      ],
       "text": "Same secret on both sides — and Rae is not one of them",
       "tone": "alarm"
      }
+    }
+   },
+   "observed": {
+    "at": "2026-10-04T20:41:37.978Z",
+    "sha": "edf7afae19cd7abea97d1636ba43f43e1c88a0c3",
+    "verdict": "KILLED",
+    "baselineSuite": "21 tests passed unmutated",
+    "bundle": "8508a669997a -> 9769a089950a -> 8508a669997a",
+    "failingTests": [
+     "[claims] › e2e/claims.spec.ts:236:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the fixture is reachable, and in it every check the page makes reports success",
+     "[claims] › e2e/claims.spec.ts:260:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the limitation is on screen in that state, not in the README"
+    ],
+    "rules": {
+     "baselinePassed": true,
+     "fileChanged": true,
+     "servedMutatedCode": true,
+     "namedTestFailed": true
     }
    }
   },
@@ -102,6 +209,22 @@
       "tone": "alarm"
      }
     }
+   },
+   "observed": {
+    "at": "2026-10-04T20:41:37.978Z",
+    "sha": "edf7afae19cd7abea97d1636ba43f43e1c88a0c3",
+    "verdict": "KILLED",
+    "baselineSuite": "21 tests passed unmutated",
+    "bundle": "8508a669997a -> 08b61531d4d2 -> 8508a669997a",
+    "failingTests": [
+     "[claims] › e2e/claims.spec.ts:260:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the limitation is on screen in that state, not in the README"
+    ],
+    "rules": {
+     "baselinePassed": true,
+     "fileChanged": true,
+     "servedMutatedCode": true,
+     "namedTestFailed": true
+    }
    }
   },
   "panel-1-retires-panel-3": {
@@ -116,6 +239,22 @@
       "text": "Different secrets — and nothing reported a failure",
       "tone": "trap"
      }
+    }
+   },
+   "observed": {
+    "at": "2026-10-04T20:41:37.978Z",
+    "sha": "edf7afae19cd7abea97d1636ba43f43e1c88a0c3",
+    "verdict": "KILLED",
+    "baselineSuite": "21 tests passed unmutated",
+    "bundle": "8508a669997a -> 9a42a93d12b9 -> 8508a669997a",
+    "failingTests": [
+     "[claims] › e2e/claims.spec.ts:214:3 › breaking one byte › re-running panel 1 does NOT retire a fresh broken result"
+    ],
+    "rules": {
+     "baselinePassed": true,
+     "fileChanged": true,
+     "servedMutatedCode": true,
+     "namedTestFailed": true
     }
    }
   }
