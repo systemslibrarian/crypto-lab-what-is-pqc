@@ -44,9 +44,10 @@ hide the qualifications that make an exhibit truthful.
 
 1. **Two people agree on a secret, in the open** — a real X25519 exchange. Rae and Dev each
    publish one value and each combine it with something they never sent; both end up holding the
-   same 32 bytes. Then the sentence that does the work: a machine that does not exist yet is
-   expected to be able to take what crossed the wire and work out the secret anyway. No Shor, no
-   period finding, no factoring — the link to
+   same 32 bytes. Then the sentence that does the work: a quantum computer large enough to take
+   what crossed the wire and work out the secret is expected to be able to, and no such machine
+   has been built. Quantum computers exist; that one does not. No Shor, no period finding, no
+   factoring — the link to
    [Shor](https://systemslibrarian.github.io/crypto-lab-shor/) is there for a reader who wants
    the mechanism.
 
@@ -92,8 +93,10 @@ hide the qualifications that make an exhibit truthful.
 
 - **Use it** as someone's first contact with post-quantum cryptography — a class, an onboarding
   session, a link in a thread where someone has just called PQC "stronger encryption".
-- **Use it** to settle the size question concretely. "The handshake got 35 times bigger" is a
-  sentence people argue about; this page is 2,272 against 64 with the arithmetic beside it.
+- **Use it** to settle the size question concretely, and to scope it. The claim people argue
+  about is usually "the handshake got 35 times bigger"; what this page shows is that the
+  key-agreement messages did — 2,272 bytes against 64, with the arithmetic and a pair of
+  to-scale bars beside it, and nothing said about a whole connection or about speed.
 - **Do NOT use it** to decide what to migrate. It deliberately holds no inventory, no timeline
   and no recommendation; [PQ Chooser](https://systemslibrarian.github.io/crypto-lab-pq-chooser/)
   and [Harvest Timeline](https://systemslibrarian.github.io/crypto-lab-harvest-timeline/) are
