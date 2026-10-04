@@ -274,9 +274,12 @@
           <div id="sizes-body"></div>
           <p class="panel-note">
             This is not a footnote. Handshakes getting bigger is the real engineering consequence
-            of the change — it is why connections are negotiated the way they are, and why
-            there is a whole family of problems about what happens when something along the way
-            cannot carry the larger message.
+            of the change: 1,184 bytes do not fit where 32 did, and a message that no longer fits
+            is a message something along the way may refuse, truncate, or quietly negotiate away.
+            That is the subject of
+            <a href="https://systemslibrarian.github.io/crypto-lab-downgrade-wire/" target="_blank" rel="noopener noreferrer">Downgrade Wire</a>,
+            and it is why today's deployments run both exchanges together rather than swapping one
+            for the other.
           </p>
         </section>
 
