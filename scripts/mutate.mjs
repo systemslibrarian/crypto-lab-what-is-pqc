@@ -66,6 +66,14 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = fileURLToPath(new URL('../', import.meta.url)).replace(/\/$/, '')
+/* Read from playwright.config.ts rather than retyped: two places holding one port is
+   how a loop ends up checking a port the suite does not use. */
+const PORT = (() => {
+  const config = readFileSync(join(root, 'playwright.config.ts'), 'utf8')
+  const match = /const PORT = (\d+)/.exec(config)
+  if (!match) throw new Error('could not read PORT out of playwright.config.ts')
+  return match[1]
+})()
 const REGISTRY = join(root, 'e2e', 'verdict-mutations.json')
 const registry = JSON.parse(readFileSync(REGISTRY, 'utf8'))
 const [command, ...rest] = process.argv.slice(2)
@@ -159,6 +167,36 @@ for (const id of ids) {
 if (invalid.length) {
   console.error('Refusing to run: these patches cannot make the round trip.\n')
   for (const line of invalid) console.error(`  ${line}`)
+  process.exit(2)
+}
+
+/* Rule 3, asked BEFORE anything is built: is the port already answering?
+ *
+ * `reuseExistingServer` is false under CI=1, so Playwright would refuse the run with
+ * its own message -- but only after the baseline build, and the message does not say
+ * what to do. Worse is the case this catches outright: an orphaned preview from an
+ * ABORTED earlier run, still serving the dist of a deleted isolated tree. That is the
+ * stale-checkout hazard §4.1 names by name, and it was found here -- the orphan was
+ * serving a different bundle hash than HEAD builds. A run judged against it would be
+ * judging a checkout nobody has.
+ *
+ * Narrow on purpose: it names the pid rather than killing it, because a broad kill is
+ * how this went wrong in the first place. */
+const held = (() => {
+  try {
+    return execSync(`lsof -nP -iTCP:${PORT} -sTCP:LISTEN -t`, { encoding: 'utf8' }).trim()
+  } catch {
+    return ''
+  }
+})()
+if (held) {
+  console.error(`Refusing to run: something is already listening on port ${PORT}.\n`)
+  console.error(`  pid(s): ${held.split('\n').join(', ')}`)
+  console.error('\nUnder CI=1 this loop starts its own server and will not reuse one, so a')
+  console.error('listener here is either a stray preview from an aborted run -- which may be')
+  console.error('serving the dist of a tree that no longer exists -- or another lab on the')
+  console.error('wrong port. Stop that pid specifically; a `pkill -f "vite preview"` would')
+  console.error('also kill whatever a session in a sibling lab is running.')
   process.exit(2)
 }
 
@@ -304,10 +342,15 @@ for (const id of ids) {
      * A red run whose output says the page never loaded is not evidence either way,
      * which is what rule 3's classifier is for -- but reporting NOT A KILL and
      * stopping there makes a person re-run the whole loop and, worse, invites them to
-     * re-run it until it comes out green. Measured here: `vite preview --strictPort`
-     * is started and torn down once per phase, twenty-odd times in a full run, and
-     * macOS does not always have 4212 free by the time the next one asks for it. Two
-     * of ten mutations came back "nothing served on the port" in a single run.
+     * re-run it until it comes out green.
+     *
+     * THE CAUSE WAS MEASURED, AND IT IS NOT PORT REUSE. Two of ten mutations came
+     * back "nothing served on the port" in one run, and the reason turned out to be
+     * another process on the machine: a session working on a SIBLING LAB ran
+     * `pkill -f 'vite preview'`, which matches this lab's preview server too and
+     * killed it mid-suite. A pattern kill is indiscriminate across repositories, and
+     * this fleet has a session per lab. Nothing in here can prevent that, so the loop
+     * re-asks instead of reporting a verdict about someone else's cleanup.
      *
      * So the loop re-asks the question once. This does not weaken any of the four
      * rules: the retry is triggered only by a shape that means the code never ran, a
