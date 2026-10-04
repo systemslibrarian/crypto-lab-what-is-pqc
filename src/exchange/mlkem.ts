@@ -128,11 +128,39 @@ export function corruptOneByte(
   }
 }
 
+/**
+ * What one changed byte ACTUALLY did, as one of three named outcomes.
+ *
+ * This is the answer key for panel 3's prediction, and it is DERIVED FROM THE RUN
+ * rather than written down. That distinction is the whole point of asking a learner
+ * to predict: a page that grades a guess against a constant is telling them what the
+ * answer is, and would go on telling them if the cryptography underneath changed.
+ * Here, if ML-KEM ever started raising an exception on a corrupted ciphertext, the
+ * page would start marking "it will raise an error" CORRECT, without an edit.
+ *
+ * The three outcomes are the three things a beginner actually guesses. Two of them
+ * are wrong today, and they are wrong because of what the standard specifies, not
+ * because this page says so.
+ */
+export type BrokenBoxOutcome = 'error' | 'differ' | 'nothing'
+
+export function outcomeOfBrokenBox(broken: CorruptedDecapsulation): BrokenBoxOutcome {
+  if (broken.threw) return 'error'
+  return broken.secretsMatch ? 'nothing' : 'differ'
+}
+
 /* ── Panel 4: who sent that key? (the negative claim's evidence fixture) ───── */
 
 export interface ImpostorExchange {
   /** The key Dev actually encapsulated to, and who really owns it. */
   readonly keyOwner: 'Rae' | 'Mal'
+  /**
+   * Did anything in this exchange raise? Measured, because it is the ONLY channel
+   * through which a bare KEM could signal that something is wrong — and it is the
+   * channel the standard does not use. Recording it is what lets panel 4's answer
+   * key say "no warning is possible here" as a measurement rather than as a claim.
+   */
+  readonly threw: boolean
   /** Dev's secret, from encapsulation. */
   readonly devSharedSecret: Uint8Array
   /** The secret held by whoever owns the key Dev used. */
@@ -171,13 +199,21 @@ export function runImpostorExchange(impostor = true): ImpostorExchange {
   // is, which is precisely the point being made.
   const { cipherText, sharedSecret } = ml_kem768.encapsulate(owner.publicKey)
 
-  const ownerSharedSecret = ml_kem768.decapsulate(cipherText, owner.secretKey)
-  // What Rae gets if Rae tries: with Mal's ciphertext against Rae's key this is
-  // implicit rejection again, so it is a real 32 bytes that simply do not match.
-  const raeAttempt = ml_kem768.decapsulate(cipherText, rae.secretKey)
+  let ownerSharedSecret = new Uint8Array(0)
+  let raeAttempt = new Uint8Array(0)
+  let threw = false
+  try {
+    ownerSharedSecret = ml_kem768.decapsulate(cipherText, owner.secretKey)
+    // What Rae gets if Rae tries: with Mal's ciphertext against Rae's key this is
+    // implicit rejection again, so it is a real 32 bytes that simply do not match.
+    raeAttempt = ml_kem768.decapsulate(cipherText, rae.secretKey)
+  } catch {
+    threw = true
+  }
 
   return {
     keyOwner: impostor ? 'Mal' : 'Rae',
+    threw,
     devSharedSecret: sharedSecret,
     ownerSharedSecret,
     secretsMatch: equalBytes(sharedSecret, ownerSharedSecret),
@@ -185,4 +221,26 @@ export function runImpostorExchange(impostor = true): ImpostorExchange {
     cipherTextBytes: cipherText.length,
     publicKeyBytes: owner.publicKey.length,
   }
+}
+
+/**
+ * What the page's own checks ACTUALLY reported, as one of three named outcomes.
+ *
+ * Panel 4's answer key, derived the same way panel 3's is. The interesting one is
+ * `warn`: a bare KEM exchange has exactly one channel for telling a caller that
+ * something is wrong, and that channel is an exception. FIPS 203 does not use it
+ * here — there is nothing for it to object to, because nobody asked ML-KEM whose key
+ * it was. So `warn` is an outcome this construction CANNOT produce, and saying so by
+ * reading `threw` off the run is different in kind from saying so in a comment: if a
+ * future version started raising, the page would start grading "it will warn you"
+ * correct on its own.
+ *
+ * That is also why the option is offered at all. "Something will warn me" is the
+ * guess a beginner makes, and the absence of the warning is the exhibit.
+ */
+export type OwnerOutcome = 'fail' | 'pass' | 'warn'
+
+export function outcomeOfOwnerExchange(run: ImpostorExchange): OwnerOutcome {
+  if (run.threw) return 'warn'
+  return run.secretsMatch ? 'pass' : 'fail'
 }

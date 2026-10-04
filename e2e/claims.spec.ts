@@ -568,6 +568,158 @@ test.describe("the brief's hard rules, as tests", () => {
   })
 })
 
+test.describe('the prediction prompts', () => {
+  test('both arrive with nothing guessed and nothing graded', async ({ page }) => {
+    await boot(page)
+    // A page that pre-selected a guess would be answering its own question.
+    for (const group of ['break', 'owner']) {
+      await expect(page.locator(`input[name="predict-${group}"]:checked`)).toHaveCount(0)
+    }
+    await expectVerdict(page, 'break-prediction', {
+      tone: 'open',
+      text: 'No prediction yet',
+      contains: 'Nothing has been changed yet, so there is nothing to grade.',
+    })
+    await expectVerdict(page, 'owner-prediction', {
+      tone: 'open',
+      text: 'No prediction yet',
+      contains: 'Nothing is scored',
+    })
+  })
+
+  test("panel 3 grades against the facts it printed, not against an answer key", async ({
+    page,
+  }) => {
+    await boot(page)
+    // THE CROSS-CHECK THAT MAKES THE GRADING WORTH ANYTHING. The page prints two
+    // facts about the run — do the secrets match, did ML-KEM error — and it also
+    // grades a guess. Those are two surfaces describing one outcome, and this reads
+    // the grading back against the facts rather than against a string this test
+    // knows. A page whose answer key drifted from its own measurements fails here.
+    await page.locator('#predict-break-differ').check()
+    await page.locator('#break-toggle').click()
+
+    const match = await page.locator('[data-fact="match"]').innerText()
+    const errored = await page.locator('[data-fact="error"]').innerText()
+    const secretsDiffer = /No . they differ/i.test(match.replace(/\u2014/g, '.'))
+    const raisedAnError = /^Yes/i.test(errored.trim())
+    // The outcome the printed facts imply, derived here by a different route than
+    // the source takes.
+    const impliedByFacts = raisedAnError ? 'error' : secretsDiffer ? 'differ' : 'nothing'
+    expect(impliedByFacts, 'the facts rows must imply a differing-secrets outcome').toBe('differ')
+
+    // "differ" was the guess, so a page grading against its own measurement must
+    // call it correct.
+    await expectVerdict(page, 'break-prediction', {
+      tone: 'pass',
+      text: 'That is what happened',
+      contains: 'The two secrets would end up different.',
+    })
+  })
+
+  test('panel 3 marks the two misconceptions wrong, and quotes what really happened', async ({
+    page,
+  }) => {
+    await boot(page)
+    for (const [guess, said] of [
+      ['error', 'ML-KEM would raise an error.'],
+      ['nothing', 'Nothing would change'],
+    ] as const) {
+      await page.locator(`#predict-break-${guess}`).check()
+      if (guess === 'error') await page.locator('#break-toggle').click()
+      await expectVerdict(page, 'break-prediction', {
+        tone: 'trap',
+        text: 'Not what happened — and this is the useful part',
+        // It quotes the guess back AND names the measured outcome, so a reader who
+        // was wrong is told which is which rather than just marked.
+        contains: [said, 'The two secrets would end up different.'],
+      })
+    }
+  })
+
+  test('panel 4 marks "something will warn me" wrong, because nothing can', async ({ page }) => {
+    await boot(page)
+    await page.locator('#predict-owner-warn').check()
+    await page.locator('#key-owner-impostor').check()
+
+    // The grading has to agree with the verdict beside it: that verdict says every
+    // check passed, so the graded outcome must be "they all pass" and not a warning.
+    await expect(page.locator('[data-verdict="key-owner"]')).toContainText(
+      'Every check on this page passed',
+    )
+    await expectVerdict(page, 'owner-prediction', {
+      tone: 'trap',
+      text: 'Not what happened — and this is the useful part',
+      contains: [
+        'ML-KEM would warn that the key is not Rae',
+        'The checks on this page would all pass.',
+        'the standard does not use it here',
+      ],
+    })
+  })
+
+  test('a changed guess re-grades against the same run', async ({ page }) => {
+    await boot(page)
+    await page.locator('#predict-owner-fail').check()
+    await page.locator('#key-owner-impostor').check()
+    const runAfterSwitch = await page
+      .locator('[data-verdict="key-owner"]')
+      .getAttribute('data-run')
+    await expect(page.locator('[data-verdict="owner-prediction"]')).toHaveAttribute(
+      'data-tone',
+      'trap',
+    )
+
+    await page.locator('#predict-owner-pass').check()
+    await expect(page.locator('[data-verdict="owner-prediction"]')).toHaveAttribute(
+      'data-tone',
+      'pass',
+    )
+    // Changing a guess must NOT quietly run a new exchange underneath it, or the
+    // reader is being graded against something they never saw.
+    expect(await page.locator('[data-verdict="key-owner"]').getAttribute('data-run')).toBe(
+      runAfterSwitch,
+    )
+  })
+})
+
+test.describe('the harvest strip', () => {
+  test('is labelled an illustration, and says no computation is running', async ({ page }) => {
+    await boot(page)
+    const note = page.locator('[data-illustration="harvest"]')
+    await expect(note).toBeVisible()
+    await expect(note).toContainText('An illustration, not a computation')
+    await expect(note).toContainText('no arrival date is being predicted')
+    // §2's visual-honesty rule: an illustrative simplification is labelled as one.
+    // And no year, because nobody has that fact.
+    const strip = await page.locator('#harvest-strip').innerText()
+    expect(strip, 'the strip must not invent an arrival year').not.toMatch(/\b20[2-9][0-9]\b/)
+    // Case-insensitive: the step labels are `text-transform: uppercase`, so innerText
+    // reports them uppercased. Asserting the rendered case would be asserting the CSS.
+    expect(strip.toLowerCase()).toContain('if such a machine is built')
+  })
+
+  test('its one number is the measured one from panel 1', async ({ page }) => {
+    await boot(page)
+    // The frame quotes what panel 1 actually put on the wire, so the strip cannot
+    // drift from the exchange above it. Re-running panel 1 has to move it.
+    const total = await page.locator('[data-total="classical"]').innerText()
+    await expect(page.locator('[data-harvest="wire"]')).toHaveText(total.trim())
+    await page.locator('#classical-run').click()
+    const after = await page.locator('[data-total="classical"]').innerText()
+    await expect(page.locator('[data-harvest="wire"]')).toHaveText(after.trim())
+  })
+
+  test('records both halves of what an observer needs', async ({ page }) => {
+    await boot(page)
+    // An observer who keeps only the public values has nothing to decrypt later; one
+    // who keeps only the ciphertext has no way to reach the key. The strip says both.
+    const strip = page.locator('#harvest-strip')
+    await expect(strip).toContainText('the encrypted bytes of everything said afterwards')
+    await expect(strip).toContainText('Both halves matter')
+  })
+})
+
 test.describe('the disclosure boundary', () => {
   test('the disclosures ship shut, and open through a real summary', async ({ page }) => {
     await boot(page)

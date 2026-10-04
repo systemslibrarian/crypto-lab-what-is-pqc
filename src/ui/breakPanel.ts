@@ -1,7 +1,8 @@
 import { hexPrefix } from '../exchange/bytes.js'
-import { corruptOneByte, type PqExchange } from '../exchange/mlkem.js'
+import { corruptOneByte, outcomeOfBrokenBox, type PqExchange } from '../exchange/mlkem.js'
 import { formatBytes } from '../exchange/sizes.js'
 import { clear, el } from './dom.js'
+import { createPrediction, gradePrediction } from './predict.js'
 import { createVerdict } from './verdict.js'
 
 /**
@@ -46,6 +47,20 @@ type Mode = 'untouched' | 'broken' | 'retired'
 const BYTE_INDEX = 537
 const BIT_MASK = 0x02
 
+/**
+ * The three things a beginner guesses, in plain language, and the sentence each one
+ * reads as when it is quoted back to them.
+ *
+ * Two of these are wrong, and they are wrong because of what FIPS 203 specifies —
+ * not because this page decided so. Which one is right is read off the run by
+ * `outcomeOfBrokenBox`, never from this object.
+ */
+const BREAK_OUTCOMES: Record<string, string> = {
+  error: 'ML-KEM would raise an error.',
+  differ: 'The two secrets would end up different.',
+  nothing: 'Nothing would change — the secrets would still match.',
+}
+
 export function createBreakPanel(
   into: HTMLElement,
   exchange: PqExchange,
@@ -57,6 +72,19 @@ export function createBreakPanel(
 
   const compare = el('div', { class: 'compare' })
   const verdict = createVerdict('byte-flip')
+  const predict = createPrediction({
+    id: 'break',
+    verdictId: 'break-prediction',
+    legend: 'Before you press it — what do you think one changed byte does?',
+    options: [
+      { value: 'error', label: BREAK_OUTCOMES.error },
+      { value: 'differ', label: BREAK_OUTCOMES.differ },
+      { value: 'nothing', label: BREAK_OUTCOMES.nothing },
+    ],
+    // Re-grade in place when the guess changes, so a reader who changes their mind
+    // after seeing the result gets an honest answer rather than a stale one.
+    onChange: () => render(mode),
+  })
   const button = el('button', {
     class: 'btn btn-primary',
     type: 'button',
@@ -68,7 +96,7 @@ export function createBreakPanel(
     render(mode === 'broken' ? 'untouched' : 'broken')
   })
 
-  into.append(compare, verdict.el, button)
+  into.append(predict.el, predict.verdict.el, compare, verdict.el, button)
 
   /** Two secrets, labelled, with the comparison and the error question apart. */
   const renderCompare = (
@@ -110,6 +138,36 @@ export function createBreakPanel(
     )
   }
 
+  /**
+   * Grade the guess against what the run MEASURED.
+   *
+   * `outcomeOfBrokenBox` is the answer key and it comes from the exchange, so this
+   * cannot drift from what the facts rows above it report. Before the byte has been
+   * changed there is no outcome to grade against, so the marker waits.
+   */
+  const grade = (outcome: string | null): void => {
+    predict.verdict.set(
+      outcome === null
+        ? gradePrediction({
+            guess: null,
+            actual: '',
+            outcomes: BREAK_OUTCOMES,
+            run: currentRun,
+            because: 'Nothing has been changed yet, so there is nothing to grade.',
+          })
+        : gradePrediction({
+            guess: predict.value(),
+            actual: outcome,
+            outcomes: BREAK_OUTCOMES,
+            run: currentRun,
+            because:
+              'FIPS 203 specifies that a ciphertext which does not re-encrypt to itself ' +
+              'yields a secret derived from a per-key rejection value. A well-formed secret, ' +
+              'just not the other side\u2019s one, and no error to go with it.',
+          }),
+    )
+  }
+
   function render(next: Mode): void {
     mode = next
 
@@ -131,6 +189,7 @@ export function createBreakPanel(
       })
       button.textContent = 'Change one byte of the new sealed box'
       button.setAttribute('data-mode', 'break')
+      grade(null)
       return
     }
 
@@ -152,6 +211,7 @@ export function createBreakPanel(
       })
       button.textContent = 'Change one byte of the sealed box'
       button.setAttribute('data-mode', 'break')
+      grade(null)
       return
     }
 
@@ -194,6 +254,7 @@ export function createBreakPanel(
     )
     button.textContent = 'Put the byte back'
     button.setAttribute('data-mode', 'restore')
+    grade(outcomeOfBrokenBox(broken))
   }
 
   render('untouched')

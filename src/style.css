@@ -889,6 +889,83 @@ body {
   }
 }
 
+/* ── Prediction prompts ─────────────────────────────────────────────────── */
+/* The same control as panel 4's owner choice -- a real fieldset with radios -- so a
+   reader meets one pattern twice rather than two patterns once. The accent wash marks
+   it as the thing to do before reading on, without using colour to carry meaning:
+   the legend asks the question in words. */
+.predict {
+  background: color-mix(in oklab, var(--accent) 6%, var(--surface-2));
+}
+
+/* The waiting state. Grey, because nothing has been concluded -- distinct from the
+   retired grey, which means something WAS concluded and no longer holds. */
+.verdict[data-tone='open'] {
+  border-color: var(--border-strong);
+  border-left-style: dashed;
+  background: var(--surface-2);
+}
+.verdict[data-tone='open'] .verdict-glyph {
+  color: var(--text-dim);
+}
+
+/* ── The harvest strip: three frames ───────────────────────────────────────── */
+/* An illustration, and labelled as one in the markup above it. Numbered <ol>,
+   because the order is the argument. */
+.frame-note {
+  font-size: 0.92rem;
+  color: var(--text-dim);
+  border: 1px dashed var(--border-strong);
+  border-radius: 9px;
+  padding: 0.55rem 0.8rem;
+  margin: 0 0 0.8rem;
+}
+
+.frames {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.8rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  counter-reset: frame;
+}
+
+.frame {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  padding: 0.7rem 0.85rem;
+}
+
+.frame-step {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.frame-title {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.frame-text {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--text-dim);
+}
+
+.frame-text span {
+  font-family: var(--mono);
+  color: var(--text);
+}
+
 /* ── Link lists and the honesty card ───────────────────────────────────── */
 .link-list,
 .honesty-list {

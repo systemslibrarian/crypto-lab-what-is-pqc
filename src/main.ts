@@ -6,6 +6,7 @@ import { runClassicalExchange, viewClassical } from './exchange/x25519.js'
 import { createBreakPanel } from './ui/breakPanel.js'
 import { createExchangePanel } from './ui/exchangePanel.js'
 import { mount } from './ui/dom.js'
+import { createHarvestStrip } from './ui/harvestStrip.js'
 import { createOwnerPanel } from './ui/ownerPanel.js'
 import { createSizesPanel } from './ui/sizesPanel.js'
 
@@ -25,6 +26,7 @@ const pqBody = mount('pq-body')
 const sizesBody = mount('sizes-body')
 const breakBody = mount('break-body')
 const ownerBody = mount('owner-body')
+const harvestBody = mount('harvest-strip')
 
 interface State {
   classical: AgreedSecret
@@ -48,6 +50,7 @@ const pqPanel = createExchangePanel(pqBody, {
   rightRole: 'Seals a box to that key, keeping what sealing produced.',
 })
 const sizesPanel = createSizesPanel(sizesBody)
+const harvestStrip = createHarvestStrip(harvestBody)
 
 function classicalStep(run: number): AgreedSecret {
   const view = viewClassical(runClassicalExchange())
@@ -60,6 +63,13 @@ function pqStep(run: number): { exchange: PqExchange; view: AgreedSecret } {
   const view = viewPq(exchange)
   pqPanel.update(view, run)
   return { exchange, view }
+}
+
+function renderHarvest(state: State): void {
+  // Frame one quotes what panel 1 actually put on the wire, so re-running panel 1
+  // moves the strip's one number with it rather than leaving a stale figure beside
+  // a fresh exchange.
+  harvestStrip.update(state.classical.wire.reduce((total, item) => total + item.bytes, 0))
 }
 
 function renderComparison(state: State): void {
@@ -78,6 +88,7 @@ const state: State = {
   pqRun: 1,
 }
 renderComparison(state)
+renderHarvest(state)
 
 const breakPanel = createBreakPanel(breakBody, state.pqExchange, state.pqRun)
 createOwnerPanel(ownerBody)
@@ -86,6 +97,7 @@ mount('classical-run').addEventListener('click', () => {
   state.classicalRun += 1
   state.classical = classicalStep(state.classicalRun)
   renderComparison(state)
+  renderHarvest(state)
   // Deliberately does NOT touch panel 3: panel 3 is about panel 2's sealed box,
   // and retiring it here would retire a fresh verdict for an unrelated action.
 })

@@ -1,7 +1,12 @@
 import { hexPrefix } from '../exchange/bytes.js'
-import { runImpostorExchange } from '../exchange/mlkem.js'
+import {
+  outcomeOfOwnerExchange,
+  runImpostorExchange,
+  type ImpostorExchange,
+} from '../exchange/mlkem.js'
 import { formatBytes } from '../exchange/sizes.js'
 import { clear, el } from './dom.js'
+import { createPrediction, gradePrediction } from './predict.js'
 import { createVerdict } from './verdict.js'
 
 /**
@@ -42,6 +47,19 @@ export interface OwnerPanelState {
 
 type Owner = 'rae' | 'impostor'
 
+/**
+ * The three guesses, and the sentence each reads as when quoted back.
+ *
+ * `warn` is the one worth offering. It is what most people expect — something in the
+ * stack will surely notice — and this construction has no way to produce it. Which of
+ * the three is right is read off the run by `outcomeOfOwnerExchange`, never from here.
+ */
+const OWNER_OUTCOMES: Record<string, string> = {
+  fail: 'The checks on this page would fail.',
+  pass: 'The checks on this page would all pass.',
+  warn: 'ML-KEM would warn that the key is not Rae\u2019s.',
+}
+
 /** The negative claim, in one sentence. Asserted on screen by claims.spec.ts. */
 export const NEGATIVE_CLAIM =
   'ML-KEM agreed on a secret and proved nothing about who is holding the other end of it.'
@@ -49,6 +67,7 @@ export const NEGATIVE_CLAIM =
 export function createOwnerPanel(into: HTMLElement): OwnerPanelState {
   let selected: Owner = 'rae'
   let runSerial = 0
+  let lastImpostor: ImpostorExchange | null = null
 
   const options = el('div', { class: 'choice-options' })
   const option = (value: Owner, text: string, note: string): HTMLElement => {
@@ -67,6 +86,7 @@ export function createOwnerPanel(into: HTMLElement): OwnerPanelState {
       if (selected === value) return
       selected = value
       update()
+      grade()
     })
     return el(
       'label',
@@ -92,6 +112,18 @@ export function createOwnerPanel(into: HTMLElement): OwnerPanelState {
 
   const who = el('div', { class: 'who' })
   const verdict = createVerdict('key-owner')
+  const predict = createPrediction({
+    id: 'owner',
+    verdictId: 'owner-prediction',
+    legend:
+      'Before you switch it — if someone hands Dev a key and says it is Rae\u2019s, what happens?',
+    options: [
+      { value: 'fail', label: OWNER_OUTCOMES.fail },
+      { value: 'pass', label: OWNER_OUTCOMES.pass },
+      { value: 'warn', label: OWNER_OUTCOMES.warn },
+    ],
+    onChange: () => grade(),
+  })
   const limit = el(
     'div',
     { class: 'callout', 'data-limitation': 'authentication' },
@@ -111,6 +143,8 @@ export function createOwnerPanel(into: HTMLElement): OwnerPanelState {
   )
 
   into.append(
+    predict.el,
+    predict.verdict.el,
     el(
       'fieldset',
       { class: 'choice' },
@@ -122,10 +156,44 @@ export function createOwnerPanel(into: HTMLElement): OwnerPanelState {
     limit,
   )
 
+  /**
+   * Grade the guess against what the IMPOSTOR run measured.
+   *
+   * Graded only once the reader has actually switched to the impostor option: the
+   * question is about that state, and grading it while the honest key is selected
+   * would be marking a guess against a run that did not test it. `lastImpostor`
+   * holds the most recent impostor result so a changed guess re-grades against the
+   * same run rather than silently generating a new one.
+   */
+  function grade(): void {
+    predict.verdict.set(
+      lastImpostor === null
+        ? gradePrediction({
+            guess: null,
+            actual: '',
+            outcomes: OWNER_OUTCOMES,
+            run: runSerial,
+            because:
+              'Pick one, then choose the second option below to find out. Nothing is scored.',
+          })
+        : gradePrediction({
+            guess: predict.value(),
+            actual: outcomeOfOwnerExchange(lastImpostor),
+            outcomes: OWNER_OUTCOMES,
+            run: runSerial,
+            because:
+              'ML-KEM was never asked whose key it was, so it has nothing to object to. A bare ' +
+              'KEM exchange has exactly one way to tell a caller something is wrong \u2014 raising ' +
+              'an exception \u2014 and the standard does not use it here.',
+          }),
+    )
+  }
+
   function update(): void {
     runSerial += 1
     const impostor = selected === 'impostor'
     const result = runImpostorExchange(impostor)
+    if (impostor) lastImpostor = result
 
     // Three participants, drawn rather than described. In the impostor state the
     // relationship a reader has to see is that Dev's partner is NOT the person Dev
@@ -209,6 +277,7 @@ export function createOwnerPanel(into: HTMLElement): OwnerPanelState {
   }
 
   update()
+  grade()
 
   return { run: () => runSerial }
 }

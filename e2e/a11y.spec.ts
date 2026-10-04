@@ -23,7 +23,9 @@ import {
  * panel's defect was a keyboard defect; panel 4 on the honest key, on the impostor
  * fixture, and with the impostor radio focused inside that alarm-toned region; a
  * primary button and a shared top bar control hovered; a button and an outbound
- * link focused. Twenty-four states, each scanned by nine oracles, at three widths.
+ * link focused; and both prediction prompts guessed wrong, graded, then corrected and
+ * re-graded, which is the only place the `open` and prediction-`trap` tones are
+ * painted at all. Thirty states, each scanned by nine oracles, at three widths.
  *
  * THE DISCLOSURES ARE OPENED THROUGH THEIR SUMMARIES, one at a time, and the shut
  * state is scanned too. The fleet gate this replaces stripped every `[hidden]` and

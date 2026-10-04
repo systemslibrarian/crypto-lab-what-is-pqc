@@ -70,6 +70,10 @@ async function everyState(page: Page): Promise<Set<string>> {
   await page.locator('#break-toggle').click() // break again
   await page.locator('#pq-run').click() // retires panel 3
   await collect()
+  await page.locator('#predict-break-differ').check()
+  await collect()
+  await page.locator('#predict-owner-warn').check()
+  await collect()
   await page.locator('#key-owner-impostor').check()
   await collect()
   await page.locator('#key-owner-rae').check()
@@ -81,7 +85,7 @@ test.describe('verdict coverage', () => {
   test('every verdict marker the page renders has a recorded mutation', async ({ page }) => {
     await boot(page)
     const rendered = await everyState(page)
-    expect(rendered.size, 'the drive must reach at least the five markers boot() asserts').toBe(5)
+    expect(rendered.size, 'the drive must reach every marker boot() asserts').toBe(7)
     const unrecorded = [...rendered].filter((id) => !recordedMarkers.has(id)).sort()
     expect(
       unrecorded,

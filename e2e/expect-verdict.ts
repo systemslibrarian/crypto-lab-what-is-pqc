@@ -22,7 +22,7 @@ import { canonicalClaim, recordObservation, runId } from './observations.js'
  */
 export interface VerdictClaim {
   /** `data-tone` on the marker: what a reader sees as colour and glyph. */
-  tone: 'pass' | 'trap' | 'alarm' | 'retired'
+  tone: 'pass' | 'trap' | 'alarm' | 'retired' | 'open'
   /** Exact text of a descendant (`.verdict-headline` by default). */
   text?: string
   /** Substrings the marker's text must contain. */

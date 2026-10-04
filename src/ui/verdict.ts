@@ -47,14 +47,26 @@ import { el } from './dom.js'
  * matters: a stable node is what the specification is written about, but whether a
  * given screen reader announces these updates usefully has not been checked here.
  * Doing that needs a real screen reader, not a DOM assertion.
+ *
+ * THE FIVE TONES
+ *
+ * `open` is the prediction markers' waiting state: a reader has not guessed yet, so
+ * there is nothing to report. It is distinct from `retired`, which means a verdict
+ * that WAS about something and no longer is — "not yet" and "not any more" are
+ * different things to tell someone, and a shared grey would have said neither.
+ *
+ * A wrong prediction is `trap`, not an error tone, and that is deliberate: the two
+ * guesses this page marks wrong are the misconceptions it exists to correct. Being
+ * wrong there is the lesson landing, not the reader failing.
  */
-export type Tone = 'pass' | 'trap' | 'alarm' | 'retired'
+export type Tone = 'pass' | 'trap' | 'alarm' | 'retired' | 'open'
 
 const GLYPH: Record<Tone, string> = {
   pass: '✓', // check mark
   trap: '≠', // not equal — a difference, not an error (the brief's rule)
   alarm: '!', // exclamation — reports success and is compromised anyway
   retired: '—', // em dash — this verdict is no longer about anything
+  open: '?', // question mark — nothing has been concluded yet
 }
 
 export interface VerdictContent {

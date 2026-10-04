@@ -26,26 +26,6 @@
       "tone": "pass"
      }
     }
-   },
-   "observed": {
-    "at": "2026-10-04T21:59:45.263Z",
-    "sha": "7dfe7d5179ced5882de18fd8c812deb7a2bb10ae",
-    "verdict": "KILLED",
-    "baselineSuite": "31 tests passed unmutated",
-    "bundle": "bedd0d5265eb -> cd47ee889bfc -> bedd0d5265eb",
-    "failingTests": [
-     "[claims] › e2e/claims.spec.ts:87:3 › the two exchanges › panel 1 concludes what the two secrets it printed actually show",
-     "[claims] › e2e/claims.spec.ts:115:3 › the two exchanges › the two panels agree on the one thing that did not change",
-     "[claims] › e2e/claims.spec.ts:128:3 › the size comparison › the growth factor is the quotient of the two totals on screen",
-     "[claims] › e2e/claims.spec.ts:156:3 › the size comparison › the two bars are drawn to the scale of the numbers beside them",
-     "[claims] › e2e/claims.spec.ts:363:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the fixture is reachable, and in it every check the page makes reports success"
-    ],
-    "rules": {
-     "baselinePassed": true,
-     "fileChanged": true,
-     "servedMutatedCode": true,
-     "namedTestFailed": true
-    }
    }
   },
   "pq-match-inverted": {
@@ -66,26 +46,6 @@
       "text": "Same secret on both sides",
       "tone": "pass"
      }
-    }
-   },
-   "observed": {
-    "at": "2026-10-04T21:59:45.263Z",
-    "sha": "7dfe7d5179ced5882de18fd8c812deb7a2bb10ae",
-    "verdict": "KILLED",
-    "baselineSuite": "31 tests passed unmutated",
-    "bundle": "bedd0d5265eb -> 8ac1ec11f08f -> bedd0d5265eb",
-    "failingTests": [
-     "[claims] › e2e/claims.spec.ts:103:3 › the two exchanges › panel 2 concludes what the two secrets it printed actually show",
-     "[claims] › e2e/claims.spec.ts:115:3 › the two exchanges › the two panels agree on the one thing that did not change",
-     "[claims] › e2e/claims.spec.ts:128:3 › the size comparison › the growth factor is the quotient of the two totals on screen",
-     "[claims] › e2e/claims.spec.ts:156:3 › the size comparison › the two bars are drawn to the scale of the numbers beside them",
-     "[claims] › e2e/claims.spec.ts:363:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the fixture is reachable, and in it every check the page makes reports success"
-    ],
-    "rules": {
-     "baselinePassed": true,
-     "fileChanged": true,
-     "servedMutatedCode": true,
-     "namedTestFailed": true
     }
    }
   },
@@ -111,23 +71,6 @@
       "tone": "pass"
      }
     }
-   },
-   "observed": {
-    "at": "2026-10-04T21:59:45.263Z",
-    "sha": "7dfe7d5179ced5882de18fd8c812deb7a2bb10ae",
-    "verdict": "KILLED",
-    "baselineSuite": "31 tests passed unmutated",
-    "bundle": "bedd0d5265eb -> 6e6be5c391eb -> bedd0d5265eb",
-    "failingTests": [
-     "[claims] › e2e/claims.spec.ts:128:3 › the size comparison › the growth factor is the quotient of the two totals on screen",
-     "[claims] › e2e/claims.spec.ts:156:3 › the size comparison › the two bars are drawn to the scale of the numbers beside them"
-    ],
-    "rules": {
-     "baselinePassed": true,
-     "fileChanged": true,
-     "servedMutatedCode": true,
-     "namedTestFailed": true
-    }
    }
   },
   "byte-flip-noop": {
@@ -143,28 +86,9 @@
        "No error was raised and no exception was thrown",
        "32 bytes"
       ],
-      "text": "Different secrets — and nothing reported a failure",
+      "text": "Different secrets \u2014 and nothing reported a failure",
       "tone": "trap"
      }
-    }
-   },
-   "observed": {
-    "at": "2026-10-04T21:59:45.263Z",
-    "sha": "7dfe7d5179ced5882de18fd8c812deb7a2bb10ae",
-    "verdict": "KILLED",
-    "baselineSuite": "31 tests passed unmutated",
-    "bundle": "bedd0d5265eb -> c722129ecfe9 -> bedd0d5265eb",
-    "failingTests": [
-     "[claims] › e2e/claims.spec.ts:253:3 › breaking one byte › changing one byte leaves two different secrets and no reported failure",
-     "[claims] › e2e/claims.spec.ts:283:3 › breaking one byte › activating the control by keyboard leaves focus on it",
-     "[claims] › e2e/claims.spec.ts:325:3 › breaking one byte › re-running panel 2 retires the broken result and says it was retired",
-     "[claims] › e2e/claims.spec.ts:341:3 › breaking one byte › re-running panel 1 does NOT retire a fresh broken result"
-    ],
-    "rules": {
-     "baselinePassed": true,
-     "fileChanged": true,
-     "servedMutatedCode": true,
-     "namedTestFailed": true
     }
    }
   },
@@ -182,26 +106,9 @@
        "1,184 bytes",
        "1,088 bytes"
       ],
-      "text": "Same secret on both sides — and Rae is not one of them",
+      "text": "Same secret on both sides \u2014 and Rae is not one of them",
       "tone": "alarm"
      }
-    }
-   },
-   "observed": {
-    "at": "2026-10-04T21:59:45.263Z",
-    "sha": "7dfe7d5179ced5882de18fd8c812deb7a2bb10ae",
-    "verdict": "KILLED",
-    "baselineSuite": "31 tests passed unmutated",
-    "bundle": "bedd0d5265eb -> 07a81e7b1598 -> bedd0d5265eb",
-    "failingTests": [
-     "[claims] › e2e/claims.spec.ts:363:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the fixture is reachable, and in it every check the page makes reports success",
-     "[claims] › e2e/claims.spec.ts:399:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the limitation is on screen in that state, not in the README"
-    ],
-    "rules": {
-     "baselinePassed": true,
-     "fileChanged": true,
-     "servedMutatedCode": true,
-     "namedTestFailed": true
     }
    }
   },
@@ -218,22 +125,6 @@
       "tone": "alarm"
      }
     }
-   },
-   "observed": {
-    "at": "2026-10-04T21:59:45.263Z",
-    "sha": "7dfe7d5179ced5882de18fd8c812deb7a2bb10ae",
-    "verdict": "KILLED",
-    "baselineSuite": "31 tests passed unmutated",
-    "bundle": "bedd0d5265eb -> 3a444a3a66f6 -> bedd0d5265eb",
-    "failingTests": [
-     "[claims] › e2e/claims.spec.ts:399:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the limitation is on screen in that state, not in the README"
-    ],
-    "rules": {
-     "baselinePassed": true,
-     "fileChanged": true,
-     "servedMutatedCode": true,
-     "namedTestFailed": true
-    }
    }
   },
   "panel-1-retires-panel-3": {
@@ -245,25 +136,9 @@
     "byte-flip": {
      "test": "re-running panel 1 does NOT retire a fresh broken result",
      "claim": {
-      "text": "Different secrets — and nothing reported a failure",
+      "text": "Different secrets \u2014 and nothing reported a failure",
       "tone": "trap"
      }
-    }
-   },
-   "observed": {
-    "at": "2026-10-04T21:59:45.263Z",
-    "sha": "7dfe7d5179ced5882de18fd8c812deb7a2bb10ae",
-    "verdict": "KILLED",
-    "baselineSuite": "31 tests passed unmutated",
-    "bundle": "bedd0d5265eb -> 225b7b45d76c -> bedd0d5265eb",
-    "failingTests": [
-     "[claims] › e2e/claims.spec.ts:341:3 › breaking one byte › re-running panel 1 does NOT retire a fresh broken result"
-    ],
-    "rules": {
-     "baselinePassed": true,
-     "fileChanged": true,
-     "servedMutatedCode": true,
-     "namedTestFailed": true
     }
    }
   },
@@ -280,21 +155,41 @@
       "tone": "pass"
      }
     }
-   },
-   "observed": {
-    "at": "2026-10-04T21:59:45.263Z",
-    "sha": "7dfe7d5179ced5882de18fd8c812deb7a2bb10ae",
-    "verdict": "KILLED",
-    "baselineSuite": "31 tests passed unmutated",
-    "bundle": "bedd0d5265eb -> 56aea92030a1 -> bedd0d5265eb",
-    "failingTests": [
-     "[claims] › e2e/claims.spec.ts:156:3 › the size comparison › the two bars are drawn to the scale of the numbers beside them"
-    ],
-    "rules": {
-     "baselinePassed": true,
-     "fileChanged": true,
-     "servedMutatedCode": true,
-     "namedTestFailed": true
+   }
+  },
+  "break-answer-key-wrong": {
+   "file": "src/exchange/mlkem.ts",
+   "find": "  return broken.secretsMatch ? 'nothing' : 'differ'",
+   "replace": "  return broken.secretsMatch ? 'nothing' : 'error'",
+   "why": "Panel 3 asks a learner to guess and then grades them, and the whole value of that depends on the answer key coming from the run rather than from a constant. This patch re-points it at the wrong outcome: the page starts telling a reader who correctly guessed 'the secrets will differ' that they were wrong and that ML-KEM raised an error -- while the facts row two inches above still says it did not. A grading surface that can disagree with the page's own measurements is worse than no grading at all, because a reader has no reason to doubt it.",
+   "kills": {
+    "break-prediction": {
+     "test": "panel 3 grades against the facts it printed, not against an answer key",
+     "claim": {
+      "contains": "The two secrets would end up different.",
+      "text": "That is what happened",
+      "tone": "pass"
+     }
+    }
+   }
+  },
+  "owner-answer-key-warns": {
+   "file": "src/exchange/mlkem.ts",
+   "find": "  return run.secretsMatch ? 'pass' : 'fail'",
+   "replace": "  return run.secretsMatch ? 'warn' : 'fail'",
+   "why": "The 'ML-KEM will warn you' option exists because it is what most people expect, and it is wrong because a bare KEM has exactly one way to signal trouble -- an exception -- and FIPS 203 does not use it here. This patch makes the page grade that guess CORRECT, which inverts the panel's entire lesson while the verdict beside it still reads 'Every check on this page passed'. It is the single most damaging thing that could silently go wrong in this panel, which is why the answer key reads `threw` off the run instead of hardcoding the absence of a warning.",
+   "kills": {
+    "owner-prediction": {
+     "test": "panel 4 marks \"something will warn me\" wrong, because nothing can",
+     "claim": {
+      "contains": [
+       "ML-KEM would warn that the key is not Rae",
+       "The checks on this page would all pass.",
+       "the standard does not use it here"
+      ],
+      "text": "Not what happened \u2014 and this is the useful part",
+      "tone": "trap"
+     }
     }
    }
   }

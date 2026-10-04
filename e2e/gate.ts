@@ -346,16 +346,49 @@ export async function boot(page: Page): Promise<void> {
   // other direction — that every marker on screen has a recorded mutation behind
   // it — and `e2e/verdict-mutations.json` names each one as a thing a mutation
   // has to turn red.
-  for (const marker of ['classical-agreed', 'pq-agreed', 'size-change', 'byte-flip', 'key-owner']) {
+  for (const marker of [
+    'classical-agreed',
+    'pq-agreed',
+    'size-change',
+    'byte-flip',
+    'key-owner',
+    'break-prediction',
+    'owner-prediction',
+  ]) {
     await expect(page.locator(`[data-verdict="${marker}"]`)).toHaveCount(1);
   }
-  await expect(page.locator('[data-verdict]')).toHaveCount(5);
+  await expect(page.locator('[data-verdict]')).toHaveCount(7);
+
+  // ── The two prediction prompts ────────────────────────────────────────────
+  // Both arrive with NOTHING chosen and their grading marker waiting, which is the
+  // only honest arrival state: a page that pre-selected a guess would be answering
+  // its own question. Real fieldsets with real radios, so the question is the
+  // group's accessible name rather than an `aria-label` axe files under
+  // `incomplete`, and three options each because that is what is offered.
+  await expect(page.locator('#app [data-predict]')).toHaveCount(2);
+  for (const group of ['break', 'owner']) {
+    await expect(page.locator(`[data-predict="${group}"]`)).toHaveCount(1);
+    await expect(page.locator(`[data-predict="${group}"] legend`)).toHaveCount(1);
+    await expect(page.locator(`input[name="predict-${group}"]`)).toHaveCount(3);
+    await expect(page.locator(`input[name="predict-${group}"]:checked`)).toHaveCount(0);
+  }
+  for (const marker of ['break-prediction', 'owner-prediction']) {
+    await expect(page.locator(`[data-verdict="${marker}"]`)).toHaveAttribute('data-tone', 'open');
+  }
+
+  // ── The harvest strip ─────────────────────────────────────────────────────
+  // Three frames, and the label saying it is an illustration rather than something
+  // running in the tab. The label is load-bearing: a diagram beside four panels of
+  // real cryptography is otherwise read as more of the same (§2's visual honesty).
+  await expect(page.locator('#harvest-strip .frame')).toHaveCount(3);
+  await expect(page.locator('[data-illustration="harvest"]')).toBeVisible();
+  await expect(page.locator('#harvest-strip [data-harvest="wire"]')).toHaveCount(1);
 
   // Every verdict carries a tone and a run serial. The tone is what the colour,
   // the glyph and the wording all derive from; the serial is how a test tells a
   // real re-run from a re-render (§4.1b's no-op guard).
   for (const verdict of await page.locator('[data-verdict]').all()) {
-    await expect(verdict).toHaveAttribute('data-tone', /^(pass|trap|alarm|retired)$/);
+    await expect(verdict).toHaveAttribute('data-tone', /^(pass|trap|alarm|retired|open)$/);
     await expect(verdict).toHaveAttribute('data-run', /^[1-9][0-9]*$/);
   }
 
@@ -409,8 +442,12 @@ export async function boot(page: Page): Promise<void> {
   // and the honest option is the one that ships. WHICH option is pressed is
   // structural — it decides what the arrival state scans — while what the options
   // SAY is copy and belongs to claims.spec.ts.
-  await expect(page.locator('#panel-owner fieldset')).toHaveCount(1);
-  await expect(page.locator('#panel-owner legend')).toHaveCount(1);
+  // Scoped past the prediction fieldset, which is the other one in this panel. Two
+  // fieldsets is the shipped shape now, and asserting the owner choice by exclusion
+  // keeps this a statement about the owner choice rather than about the count.
+  await expect(page.locator('#panel-owner fieldset')).toHaveCount(2);
+  await expect(page.locator('#panel-owner fieldset:not(.predict)')).toHaveCount(1);
+  await expect(page.locator('#panel-owner fieldset:not(.predict) > legend')).toHaveCount(1);
   await expect(page.locator('#panel-owner input[name="key-owner"]')).toHaveCount(2);
   await expect(page.locator('#panel-owner input[name="key-owner"]:checked')).toHaveCount(1);
   await expect(page.locator('#key-owner-rae')).toBeChecked();
@@ -875,13 +912,30 @@ export async function driveAllStates(page: Page, label: string): Promise<void> {
   // keyboard defect: the button used to be replaced on activation and focus landed
   // on <body>. Pressing Enter and then asserting focus is still on the control is
   // the only thing that would have caught it, and axe has no rule for it.
+  // A prediction first, and a WRONG one, because the wrong branch is the one that
+  // carries the lesson and the one no other state paints.
+  await page.locator('#predict-break-error').check();
+  await expect(verdict('break-prediction')).toHaveAttribute('data-tone', 'open');
+  await scanAt('panel 3: a prediction made, nothing run yet — the open tone');
+
   await page.locator('#break-toggle').focus();
   await page.keyboard.press('Enter');
   await expect(verdict('byte-flip')).toHaveAttribute('data-tone', 'trap');
+  await expect(verdict('break-prediction')).toHaveAttribute('data-tone', 'trap');
   await expect(page.locator('#break-toggle')).toBeFocused();
   await expect(page.locator('#break-toggle')).toHaveAttribute('data-mode', 'restore');
-  await scanAt('panel 3: one ciphertext byte changed, by keyboard, control still focused');
+  await scanAt('panel 3: byte changed by keyboard, the wrong prediction graded');
 
+  // Then the right one, re-graded in place against the same run.
+  await page.locator('#predict-break-differ').check();
+  await expect(verdict('break-prediction')).toHaveAttribute('data-tone', 'pass');
+  await scanAt('panel 3: the prediction corrected and re-graded');
+
+  // Focus is on the prediction radio now, because checking it moved it there. Put it
+  // back on the control before typing at it -- the reader would tab or click back,
+  // and pressing Enter at whatever happens to hold focus is how a drive silently
+  // stops exercising the thing it names.
+  await page.locator('#break-toggle').focus();
   await page.keyboard.press('Enter');
   await expect(verdict('byte-flip')).toHaveAttribute('data-tone', 'pass');
   await expect(page.locator('#break-toggle')).toBeFocused();
@@ -895,7 +949,13 @@ export async function driveAllStates(page: Page, label: string): Promise<void> {
   await scanAt('panel 3: retired after panel 2 ran again');
 
   // ── Panel 4: the impostor fixture — the page's only `alarm` tone ──────────
+  // The guess most people make, which this construction cannot produce.
+  await page.locator('#predict-owner-warn').check();
+  await expect(verdict('owner-prediction')).toHaveAttribute('data-tone', 'open');
+  await scanAt('panel 4: a prediction made before the switch');
+
   await page.locator('#key-owner-impostor').check();
+  await expect(verdict('owner-prediction')).toHaveAttribute('data-tone', 'trap');
   await expect(verdict('key-owner')).toHaveAttribute('data-tone', 'alarm');
   await expect(verdict('key-owner')).toHaveAttribute('data-owner', 'mal');
   // The third participant card appears here and nowhere else: the person Dev
@@ -909,6 +969,10 @@ export async function driveAllStates(page: Page, label: string): Promise<void> {
   // scanned nowhere else.
   await expect(page.locator('#key-owner-impostor')).toBeFocused();
   await scanAt('panel 4: the impostor radio focused inside the alarm region');
+
+  await page.locator('#predict-owner-pass').check();
+  await expect(verdict('owner-prediction')).toHaveAttribute('data-tone', 'pass');
+  await scanAt('panel 4: the prediction corrected and re-graded');
 
   await page.locator('#key-owner-rae').check();
   await expect(verdict('key-owner')).toHaveAttribute('data-tone', 'pass');

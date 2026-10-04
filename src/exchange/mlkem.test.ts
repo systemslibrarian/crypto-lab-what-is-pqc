@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
 import { equalBytes } from './bytes.js'
-import { corruptOneByte, PQ_SCHEME, runImpostorExchange, runPqExchange, viewPq } from './mlkem.js'
+import {
+  corruptOneByte,
+  outcomeOfBrokenBox,
+  outcomeOfOwnerExchange,
+  PQ_SCHEME,
+  runImpostorExchange,
+  runPqExchange,
+  viewPq,
+} from './mlkem.js'
 
 describe('the post-quantum exchange panel 2 shows', () => {
   it('agrees on the same 32 bytes, encapsulation against decapsulation, over many runs', () => {
@@ -107,5 +115,61 @@ describe('who sent that key (panel 4 — the negative claim)', () => {
     expect(impostor.cipherTextBytes).toBe(honest.cipherTextBytes)
     expect(impostor.publicKeyBytes).toBe(honest.publicKeyBytes)
     expect(impostor.secretsMatch).toBe(honest.secretsMatch)
+  })
+})
+
+describe('the answer keys the prediction prompts are graded against', () => {
+  it("names a corrupted box's real outcome as a difference, not an error", () => {
+    // The page asks a learner to guess between three outcomes and then grades them.
+    // This is the grading, and it has to come from the run: a page that graded
+    // against a constant would keep marking the same option correct if ML-KEM's
+    // behaviour ever changed underneath it.
+    for (let i = 0; i < 16; i++) {
+      const broken = corruptOneByte(runPqExchange())
+      expect(outcomeOfBrokenBox(broken)).toBe('differ')
+    }
+  })
+
+  it('would name it an error if decapsulation ever raised one', () => {
+    // The branch that is false today, asserted so it is not dead code the page
+    // merely claims to have. If a future @noble/post-quantum started throwing, the
+    // page would start marking "it will raise an error" correct on its own.
+    expect(outcomeOfBrokenBox({
+      byteIndex: 0,
+      bitMask: 1,
+      devSharedSecret: new Uint8Array(32),
+      raeSharedSecret: new Uint8Array(0),
+      threw: true,
+      secretsMatch: false,
+      sameLength: false,
+    })).toBe('error')
+  })
+
+  it("names the impostor exchange's real outcome as everything passing", () => {
+    for (let i = 0; i < 8; i++) {
+      const run = runImpostorExchange(true)
+      expect(run.threw).toBe(false)
+      expect(outcomeOfOwnerExchange(run)).toBe('pass')
+    }
+  })
+
+  it('never names a warning, because this construction cannot raise one', () => {
+    // The whole exhibit. `warn` is reachable in the type and unreachable in fact,
+    // and the difference between those two is what the page is teaching.
+    for (const impostor of [true, false]) {
+      const run = runImpostorExchange(impostor)
+      expect(outcomeOfOwnerExchange(run)).not.toBe('warn')
+    }
+    // And it WOULD be named, if the only channel a bare KEM has were ever used.
+    expect(outcomeOfOwnerExchange({
+      keyOwner: 'Mal',
+      threw: true,
+      devSharedSecret: new Uint8Array(32),
+      ownerSharedSecret: new Uint8Array(0),
+      secretsMatch: false,
+      raeHoldsTheSecret: false,
+      cipherTextBytes: 1088,
+      publicKeyBytes: 1184,
+    })).toBe('warn')
   })
 })
