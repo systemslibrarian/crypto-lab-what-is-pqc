@@ -26,6 +26,27 @@
       "tone": "pass"
      }
     }
+   },
+   "observed": {
+    "at": "2026-10-04T23:09:45.868Z",
+    "sha": "ed91ca97ba1504956d019297c2bb40923ae3c78a",
+    "verdict": "KILLED",
+    "baselineSuite": "39 tests passed unmutated",
+    "bundle": "64787d3aed86 -> f35b33f56cae -> 64787d3aed86",
+    "failingTests": [
+     "[claims] › e2e/claims.spec.ts:87:3 › the two exchanges › panel 1 concludes what the two secrets it printed actually show",
+     "[claims] › e2e/claims.spec.ts:115:3 › the two exchanges › the two panels agree on the one thing that did not change",
+     "[claims] › e2e/claims.spec.ts:128:3 › the size comparison › the growth factor is the quotient of the two totals on screen",
+     "[claims] › e2e/claims.spec.ts:156:3 › the size comparison › the two bars are drawn to the scale of the numbers beside them",
+     "[claims] › e2e/claims.spec.ts:363:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the fixture is reachable, and in it every check the page makes reports success"
+    ],
+    "retriedAfterInfrastructureFailure": false,
+    "rules": {
+     "baselinePassed": true,
+     "fileChanged": true,
+     "servedMutatedCode": true,
+     "namedTestFailed": true
+    }
    }
   },
   "pq-match-inverted": {
@@ -46,6 +67,27 @@
       "text": "Same secret on both sides",
       "tone": "pass"
      }
+    }
+   },
+   "observed": {
+    "at": "2026-10-04T23:09:45.868Z",
+    "sha": "ed91ca97ba1504956d019297c2bb40923ae3c78a",
+    "verdict": "KILLED",
+    "baselineSuite": "39 tests passed unmutated",
+    "bundle": "64787d3aed86 -> 55cba242698a -> 64787d3aed86",
+    "failingTests": [
+     "[claims] › e2e/claims.spec.ts:103:3 › the two exchanges › panel 2 concludes what the two secrets it printed actually show",
+     "[claims] › e2e/claims.spec.ts:115:3 › the two exchanges › the two panels agree on the one thing that did not change",
+     "[claims] › e2e/claims.spec.ts:128:3 › the size comparison › the growth factor is the quotient of the two totals on screen",
+     "[claims] › e2e/claims.spec.ts:156:3 › the size comparison › the two bars are drawn to the scale of the numbers beside them",
+     "[claims] › e2e/claims.spec.ts:363:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the fixture is reachable, and in it every check the page makes reports success"
+    ],
+    "retriedAfterInfrastructureFailure": false,
+    "rules": {
+     "baselinePassed": true,
+     "fileChanged": true,
+     "servedMutatedCode": true,
+     "namedTestFailed": true
     }
    }
   },
@@ -71,6 +113,24 @@
       "tone": "pass"
      }
     }
+   },
+   "observed": {
+    "at": "2026-10-04T23:09:45.868Z",
+    "sha": "ed91ca97ba1504956d019297c2bb40923ae3c78a",
+    "verdict": "KILLED",
+    "baselineSuite": "39 tests passed unmutated",
+    "bundle": "64787d3aed86 -> 175af25d1efd -> 64787d3aed86",
+    "failingTests": [
+     "[claims] › e2e/claims.spec.ts:128:3 › the size comparison › the growth factor is the quotient of the two totals on screen",
+     "[claims] › e2e/claims.spec.ts:156:3 › the size comparison › the two bars are drawn to the scale of the numbers beside them"
+    ],
+    "retriedAfterInfrastructureFailure": false,
+    "rules": {
+     "baselinePassed": true,
+     "fileChanged": true,
+     "servedMutatedCode": true,
+     "namedTestFailed": true
+    }
    }
   },
   "byte-flip-noop": {
@@ -86,9 +146,31 @@
        "No error was raised and no exception was thrown",
        "32 bytes"
       ],
-      "text": "Different secrets \u2014 and nothing reported a failure",
+      "text": "Different secrets — and nothing reported a failure",
       "tone": "trap"
      }
+    }
+   },
+   "observed": {
+    "at": "2026-10-04T23:09:45.868Z",
+    "sha": "ed91ca97ba1504956d019297c2bb40923ae3c78a",
+    "verdict": "KILLED",
+    "baselineSuite": "39 tests passed unmutated",
+    "bundle": "64787d3aed86 -> 2a79d2590696 -> 64787d3aed86",
+    "failingTests": [
+     "[claims] › e2e/claims.spec.ts:253:3 › breaking one byte › changing one byte leaves two different secrets and no reported failure",
+     "[claims] › e2e/claims.spec.ts:283:3 › breaking one byte › activating the control by keyboard leaves focus on it",
+     "[claims] › e2e/claims.spec.ts:325:3 › breaking one byte › re-running panel 2 retires the broken result and says it was retired",
+     "[claims] › e2e/claims.spec.ts:341:3 › breaking one byte › re-running panel 1 does NOT retire a fresh broken result",
+     "[claims] › e2e/claims.spec.ts:590:3 › the prediction prompts › panel 3 grades against the facts it printed, not against an answer key",
+     "[claims] › e2e/claims.spec.ts:620:3 › the prediction prompts › panel 3 marks the two misconceptions wrong, and quotes what really happened"
+    ],
+    "retriedAfterInfrastructureFailure": false,
+    "rules": {
+     "baselinePassed": true,
+     "fileChanged": true,
+     "servedMutatedCode": true,
+     "namedTestFailed": true
     }
    }
   },
@@ -106,9 +188,28 @@
        "1,184 bytes",
        "1,088 bytes"
       ],
-      "text": "Same secret on both sides \u2014 and Rae is not one of them",
+      "text": "Same secret on both sides — and Rae is not one of them",
       "tone": "alarm"
      }
+    }
+   },
+   "observed": {
+    "at": "2026-10-04T23:09:45.868Z",
+    "sha": "ed91ca97ba1504956d019297c2bb40923ae3c78a",
+    "verdict": "KILLED",
+    "baselineSuite": "39 tests passed unmutated",
+    "bundle": "64787d3aed86 -> 0da1c559fd53 -> 64787d3aed86",
+    "failingTests": [
+     "[claims] › e2e/claims.spec.ts:363:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the fixture is reachable, and in it every check the page makes reports success",
+     "[claims] › e2e/claims.spec.ts:399:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the limitation is on screen in that state, not in the README",
+     "[claims] › e2e/claims.spec.ts:640:3 › the prediction prompts › panel 4 marks \"something will warn me\" wrong, because nothing can"
+    ],
+    "retriedAfterInfrastructureFailure": false,
+    "rules": {
+     "baselinePassed": true,
+     "fileChanged": true,
+     "servedMutatedCode": true,
+     "namedTestFailed": true
     }
    }
   },
@@ -125,6 +226,23 @@
       "tone": "alarm"
      }
     }
+   },
+   "observed": {
+    "at": "2026-10-04T23:09:45.868Z",
+    "sha": "ed91ca97ba1504956d019297c2bb40923ae3c78a",
+    "verdict": "KILLED",
+    "baselineSuite": "39 tests passed unmutated",
+    "bundle": "64787d3aed86 -> 2efedb263d03 -> 64787d3aed86",
+    "failingTests": [
+     "[claims] › e2e/claims.spec.ts:399:3 › the negative claim — what ML-KEM does not buy (§4.1d) › the limitation is on screen in that state, not in the README"
+    ],
+    "retriedAfterInfrastructureFailure": false,
+    "rules": {
+     "baselinePassed": true,
+     "fileChanged": true,
+     "servedMutatedCode": true,
+     "namedTestFailed": true
+    }
    }
   },
   "panel-1-retires-panel-3": {
@@ -136,9 +254,26 @@
     "byte-flip": {
      "test": "re-running panel 1 does NOT retire a fresh broken result",
      "claim": {
-      "text": "Different secrets \u2014 and nothing reported a failure",
+      "text": "Different secrets — and nothing reported a failure",
       "tone": "trap"
      }
+    }
+   },
+   "observed": {
+    "at": "2026-10-04T23:09:45.868Z",
+    "sha": "ed91ca97ba1504956d019297c2bb40923ae3c78a",
+    "verdict": "KILLED",
+    "baselineSuite": "39 tests passed unmutated",
+    "bundle": "64787d3aed86 -> a66e91e09841 -> 64787d3aed86",
+    "failingTests": [
+     "[claims] › e2e/claims.spec.ts:341:3 › breaking one byte › re-running panel 1 does NOT retire a fresh broken result"
+    ],
+    "retriedAfterInfrastructureFailure": false,
+    "rules": {
+     "baselinePassed": true,
+     "fileChanged": true,
+     "servedMutatedCode": true,
+     "namedTestFailed": true
     }
    }
   },
@@ -154,6 +289,23 @@
       "contains": "The key-agreement messages are 35.5 times bigger",
       "tone": "pass"
      }
+    }
+   },
+   "observed": {
+    "at": "2026-10-04T23:09:45.868Z",
+    "sha": "ed91ca97ba1504956d019297c2bb40923ae3c78a",
+    "verdict": "KILLED",
+    "baselineSuite": "39 tests passed unmutated",
+    "bundle": "64787d3aed86 -> 6dcd0009c6f5 -> 64787d3aed86",
+    "failingTests": [
+     "[claims] › e2e/claims.spec.ts:156:3 › the size comparison › the two bars are drawn to the scale of the numbers beside them"
+    ],
+    "retriedAfterInfrastructureFailure": false,
+    "rules": {
+     "baselinePassed": true,
+     "fileChanged": true,
+     "servedMutatedCode": true,
+     "namedTestFailed": true
     }
    }
   },
@@ -171,6 +323,24 @@
       "tone": "pass"
      }
     }
+   },
+   "observed": {
+    "at": "2026-10-04T23:09:45.868Z",
+    "sha": "ed91ca97ba1504956d019297c2bb40923ae3c78a",
+    "verdict": "KILLED",
+    "baselineSuite": "39 tests passed unmutated",
+    "bundle": "64787d3aed86 -> e927c10dd4ab -> 64787d3aed86",
+    "failingTests": [
+     "[claims] › e2e/claims.spec.ts:590:3 › the prediction prompts › panel 3 grades against the facts it printed, not against an answer key",
+     "[claims] › e2e/claims.spec.ts:620:3 › the prediction prompts › panel 3 marks the two misconceptions wrong, and quotes what really happened"
+    ],
+    "retriedAfterInfrastructureFailure": false,
+    "rules": {
+     "baselinePassed": true,
+     "fileChanged": true,
+     "servedMutatedCode": true,
+     "namedTestFailed": true
+    }
    }
   },
   "owner-answer-key-warns": {
@@ -187,9 +357,27 @@
        "The checks on this page would all pass.",
        "the standard does not use it here"
       ],
-      "text": "Not what happened \u2014 and this is the useful part",
+      "text": "Not what happened — and this is the useful part",
       "tone": "trap"
      }
+    }
+   },
+   "observed": {
+    "at": "2026-10-04T23:09:45.868Z",
+    "sha": "ed91ca97ba1504956d019297c2bb40923ae3c78a",
+    "verdict": "KILLED",
+    "baselineSuite": "39 tests passed unmutated",
+    "bundle": "64787d3aed86 -> 47cda063de01 -> 64787d3aed86",
+    "failingTests": [
+     "[claims] › e2e/claims.spec.ts:640:3 › the prediction prompts › panel 4 marks \"something will warn me\" wrong, because nothing can",
+     "[claims] › e2e/claims.spec.ts:661:3 › the prediction prompts › a changed guess re-grades against the same run"
+    ],
+    "retriedAfterInfrastructureFailure": false,
+    "rules": {
+     "baselinePassed": true,
+     "fileChanged": true,
+     "servedMutatedCode": true,
+     "namedTestFailed": true
     }
    }
   }
