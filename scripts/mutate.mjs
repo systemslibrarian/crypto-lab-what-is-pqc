@@ -266,8 +266,32 @@ const NOT_A_KILL = [
   },
   { pattern: /net::ERR_CONNECTION_REFUSED/i, label: 'nothing served on the port' },
 ]
-const notAKill = (output) =>
-  NOT_A_KILL.find(({ pattern }) => pattern.test(strip(output)))?.label ?? null
+/**
+ * Did the suite produce a READABLE result at all?
+ *
+ * Playwright's list reporter ends with `N passed` / `N failed`. A run with neither
+ * did not finish: it was killed, it crashed before reporting, or its output was
+ * truncated. This matters more than it looks, because of how the verdict is computed
+ * -- `SURVIVED` is the branch reached when no failing test can be NAMED, and an
+ * unreadable run has none to name. So without this, the harness reports the single
+ * most alarming verdict it has, the one that sends someone to go and fix the source,
+ * for a run that never happened.
+ *
+ * That was not hypothetical. A session working on a sibling lab on this machine runs
+ * `pkill -f chromium`, which kills this suite's browser mid-run; the output came back
+ * with no summary line, zero failing titles were parsed, and `byte-flip-noop` was
+ * recorded SURVIVED. Applying the same patch by hand and running its named test
+ * failed it immediately. A verdict that can be produced by someone else's cleanup is
+ * not evidence about this lab.
+ */
+const suiteReported = (output) => /\d+ (passed|failed)/.test(strip(output))
+
+const notAKill = (output) => {
+  const shape = NOT_A_KILL.find(({ pattern }) => pattern.test(strip(output)))?.label
+  if (shape) return shape
+  if (!suiteReported(output)) return 'the suite produced no readable result'
+  return null
+}
 
 /**
  * Nothing may be left listening on the port between phases.
@@ -424,6 +448,14 @@ for (const id of ids) {
     }
 
     const shapes = runs.map(([, r]) => notAKill(r.output)).filter(Boolean)
+    /* A red run in which not one failing test could be named is unreadable, not a
+       survival. Checked separately from `suiteReported` because the two go wrong
+       differently: a suite can print its summary and still have its failure blocks
+       truncated out of the buffer. */
+    const unreadable =
+      built && mutated.failed && failed.length === 0
+        ? 'red, but no failing test could be identified'
+        : null
     const survived = runs.filter(([, r]) => !r.failed).map(([m]) => m)
     const wrongName = runs
       .filter(([m, r]) => r.failed && !strip(r.output).includes(m))
