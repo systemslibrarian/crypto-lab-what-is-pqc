@@ -178,11 +178,30 @@ const sh = (cmd) =>
     maxBuffer: 64 * 1024 * 1024,
   })
 
-const DIST = join(TREE, 'dist', 'assets')
+const DIST = join(TREE, 'dist')
+const DIST_ASSETS = join(DIST, 'assets')
+
+/**
+ * Rule 3's first half: the hash of everything the browser is served.
+ *
+ * `dist/index.html` is included alongside `dist/assets/*` deliberately. A hash
+ * over the assets alone is right for every mutation currently in the ledger,
+ * because all seven patch `src/*.ts` and move the JS chunk -- but the page's own
+ * prose, its meta description and the anti-flash theme pin all live in
+ * `index.html`, and a mutation to any of those would have produced
+ * BUNDLE UNCHANGED. That fails safe rather than producing a false kill, which is
+ * why it was not urgent; it would still have reported "the code never reached the
+ * browser" about a change that did reach it, and sent someone to debug the
+ * harness.
+ */
 function bundleHash() {
-  if (!existsSync(DIST)) return null
+  if (!existsSync(DIST_ASSETS)) return null
   const h = createHash('sha256')
-  for (const f of readdirSync(DIST).sort()) h.update(f).update(readFileSync(join(DIST, f)))
+  for (const f of readdirSync(DIST_ASSETS).sort()) {
+    h.update(f).update(readFileSync(join(DIST_ASSETS, f)))
+  }
+  const page = join(DIST, 'index.html')
+  if (existsSync(page)) h.update('index.html').update(readFileSync(page))
   return h.digest('hex').slice(0, 12)
 }
 const md5 = (rel) => createHash('md5').update(readFileSync(join(TREE, rel))).digest('hex').slice(0, 12)
