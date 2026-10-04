@@ -65,7 +65,10 @@ hide the qualifications that make an exhibit truthful.
    from the byte arrays the two panels actually produced, never typed in, and a claims test reads
    the painted bar widths back to check the picture agrees with the arithmetic.
 
-4. **Break one byte** — flip one bit of the sealed box and let Rae open it anyway. Both secrets
+4. **Break one byte** — **guess first**: does one changed byte raise an error, change the secret,
+   or do nothing? Then flip the bit and let Rae open the box anyway. The guess is graded against
+   what the run measured, never against a stored answer — if ML-KEM ever started throwing here, the
+   page would start marking "it will raise an error" correct without an edit. Both secrets
    are printed side by side, and two questions are answered **separately**: do they match (no),
    and did ML-KEM report an error (no). Keeping those apart is the point — collapsing them is how
    a reader concludes that ML-KEM detected the tampering. FIPS 203 specifies that behaviour rather
@@ -74,7 +77,11 @@ hide the qualifications that make an exhibit truthful.
    *difference, not an error*, because nothing crashed and that is exactly the trap.
    [KEM Trap](https://systemslibrarian.github.io/crypto-lab-kem-trap/) is the depth treatment.
 
-5. **Who sent that key?** — the same flawless exchange, with a choice of who handed Dev the
+5. **Who sent that key?** — **guess first** again: if someone hands Dev a key and says it is
+   Rae's, do the checks fail, do they all pass, or does ML-KEM warn you? The third option is what
+   most people expect and this construction cannot produce it — the answer key reads whether
+   anything actually raised, so the absence of a warning is a measurement rather than a claim. Then
+   the same flawless exchange, with a choice of who handed Dev the
    public key. Pick the impostor and every check on the page still reports success: the exchange
    completes, both sides match, the sizes are the published sizes. Three participants are drawn —
    Dev, the key's actual owner holding the same bytes, and Rae holding nothing. The verdict reads
@@ -84,7 +91,10 @@ hide the qualifications that make an exhibit truthful.
    hole for the same reason, which the panel says so a reader does not trade one misunderstanding
    for another.
 
-6. **Recorded today, read later** — the harvest-now case in plain story form, with links out to
+6. **Recorded today, read later** — the harvest-now case in plain story form and as a three-frame
+   strip: record all of it, keep it, read this afternoon. Labelled an illustration rather than a
+   computation, with no invented arrival date, and its one number is panel 1's measured wire total.
+   Links out to
    [Harvest Timeline](https://systemslibrarian.github.io/crypto-lab-harvest-timeline/),
    [Harvest Vault](https://systemslibrarian.github.io/crypto-lab-harvest-vault/) and
    [PQ Chooser](https://systemslibrarian.github.io/crypto-lab-pq-chooser/).
@@ -190,7 +200,7 @@ directory so a crash cannot strand an inverted condition in a file that also hol
 
 ## Build & Verify
 
-**49 unit tests** across five files, and **34 browser tests** across three Playwright projects.
+**53 unit tests** across five files, and **42 browser tests** across three Playwright projects.
 
 **Known-answer tests, with their provenance kept separate** — because "pinned from the
 specification" and "reproduced from a validated implementation" are not the same evidence, and
@@ -206,7 +216,7 @@ The decapsulation group is taken whole because five of its ten cases carry
 shared secret rather than an error. That is exhibit 4's claim, checked against the publication
 rather than against this lab's own behaviour.
 
-**The accessibility gate** (`e2e/a11y.spec.ts`) drives the lab through twenty-four states and runs
+**The accessibility gate** (`e2e/a11y.spec.ts`) drives the lab through thirty states and runs
 nine oracles at each, at three viewport widths — 1280, 390, and 320, the width WCAG 1.4.10 names.
 Each of the eight disclosures is opened through its own `<summary>`, scanned, and shut again, then
 all eight are scanned open at once; the shut state is scanned too, because it is the one every
@@ -226,8 +236,8 @@ behaviour, the §4.1d negative claim with its evidence fixture, and the brief's 
 that no sentence calls PQC stronger, and that the hidden maths words appear only in the one
 sentence pointing at Lattice Gentle.
 
-**Mutation discipline** (`scripts/mutate.mjs`, `e2e/verdict-mutations.json`). Eight recorded
-mutations cover all five verdict markers. Each is a concrete patch — file, an anchor that must
+**Mutation discipline** (`scripts/mutate.mjs`, `e2e/verdict-mutations.json`). Ten recorded
+mutations cover all seven verdict markers. Each is a concrete patch — file, an anchor that must
 occur exactly once, and its replacement — never a sentence describing an edit. The runner
 applies each in an isolated `git archive HEAD` tree and enforces four rules before calling
 anything a kill: the owning test passed unmutated in the same run; the patch actually changed
