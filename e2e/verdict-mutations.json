@@ -1,0 +1,123 @@
+{
+ "note": "Each mutation is a CONCRETE PATCH -- file, an anchor that must occur exactly once, and its replacement -- never a sentence describing an edit. A sentence cannot be replayed. `node scripts/mutate.mjs run` applies each in an isolated tree archived from HEAD, enforces the four kill rules, and writes the `observed` record itself; nothing in this file is typed by hand except the patch and the kill it names. See scripts/mutate.mjs and audits/_MASTER-TEMPLATE.md section 4.1c.",
+ "kills": {
+  "rule1": "the owning test PASSED unmutated in the same run",
+  "rule2": "the patch actually CHANGED the file (anchor unique, bytes different, round trip clean)",
+  "rule3": "the run served the MUTATED code -- the built bundle's hash moved, AND the failure does not match a shape that means the code never ran",
+  "rule4": "the failure is that marker's OWN named assertion, not the suite going red"
+ },
+ "mutations": {
+  "classical-match-inverted": {
+   "file": "src/exchange/x25519.ts",
+   "find": "    secretsMatch: equalBytes(exchange.raeSharedSecret, exchange.devSharedSecret),",
+   "replace": "    secretsMatch: !equalBytes(exchange.raeSharedSecret, exchange.devSharedSecret),",
+   "why": "Panel 1's verdict is the page's answer to 'did both sides get the same secret?'. Inverting the measurement makes the page report a mismatch while printing two identical secret prefixes directly above it. The claims test cross-checks those two surfaces, so this is the mutation that proves the cross-check is doing work rather than agreeing with the source.",
+   "kills": {
+    "classical-agreed": {
+     "test": "panel 1 concludes what the two secrets it printed actually show",
+     "claim": {
+      "absent": "stronger",
+      "contains": ["<hex16>", "<hex16>", "32 bytes"],
+      "text": "Same secret on both sides",
+      "tone": "pass"
+     }
+    }
+   }
+  },
+  "pq-match-inverted": {
+   "file": "src/exchange/mlkem.ts",
+   "find": "    secretsMatch: equalBytes(exchange.raeSharedSecret, exchange.devSharedSecret),",
+   "replace": "    secretsMatch: !equalBytes(exchange.raeSharedSecret, exchange.devSharedSecret),",
+   "why": "The same inversion on the post-quantum side. Both panels are rendered by ONE function, so a single test could have covered both and proved nothing about the second measurement; this pins the ML-KEM half of the symmetry separately.",
+   "kills": {
+    "pq-agreed": {
+     "test": "panel 2 concludes what the two secrets it printed actually show",
+     "claim": {
+      "absent": "stronger",
+      "contains": ["<hex16>", "<hex16>", "32 bytes"],
+      "text": "Same secret on both sides",
+      "tone": "pass"
+     }
+    }
+   }
+  },
+  "size-ratio-inverted": {
+   "file": "src/exchange/sizes.ts",
+   "find": "    timesLarger: Math.round((pqWireBytes / classicalWireBytes) * 10) / 10,",
+   "replace": "    timesLarger: Math.round((classicalWireBytes / pqWireBytes) * 10) / 10,",
+   "why": "Size is the only comparison this lab makes, chosen because a beginner can check it with division. Swapping the division gives 0 instead of 35.5 while every byte count on the page stays correct -- so only a test that does the division ITSELF, over the two totals on screen, can catch it. A test that re-used the source's expression would have agreed with the bug.",
+   "kills": {
+    "size-change": {
+     "test": "the growth factor is the quotient of the two totals on screen",
+     "claim": {
+      "absent": "stronger",
+      "contains": ["Bigger by 35.5 times", "2,272"],
+      "tone": "pass"
+     }
+    }
+   }
+  },
+  "byte-flip-noop": {
+   "file": "src/exchange/mlkem.ts",
+   "find": "  corrupted[byteIndex] ^= bitMask",
+   "replace": "  corrupted[byteIndex] ^= 0",
+   "why": "Panel 3 claims a byte was changed and that the two sides then hold different secrets. This patch leaves the ciphertext untouched while the panel goes on saying a byte was changed -- the exact shape of a lab that tells rather than shows. The claims test re-derives the difference from the two prefixes the verdict quotes, so a page merely asserting it cannot pass.",
+   "kills": {
+    "byte-flip": {
+     "test": "changing one byte leaves two different secrets and no reported failure",
+     "claim": {
+      "contains": ["No error was raised and no exception was thrown", "32 bytes"],
+      "text": "Different secrets — and nothing reported a failure",
+      "tone": "trap"
+     }
+    }
+   }
+  },
+  "impostor-uses-raes-key": {
+   "file": "src/exchange/mlkem.ts",
+   "find": "  const owner = impostor ? mal : rae",
+   "replace": "  const owner = impostor ? rae : rae",
+   "why": "This breaks a check INSIDE the negative claim's evidence fixture, which section 4.1d requires: with the impostor branch quietly using Rae's own key, the exchange really does reach Rae and the fixture is no longer evidence of anything. The verdict is computed from the MEASURED raeHoldsTheSecret rather than from the option the reader picked, which is the only reason this is visible on the page at all.",
+   "kills": {
+    "key-owner": {
+     "test": "the fixture is reachable, and in it every check the page makes reports success",
+     "claim": {
+      "contains": ["Every check on this page passed", "1,184 bytes", "1,088 bytes"],
+      "text": "Same secret on both sides — and Rae is not one of them",
+      "tone": "alarm"
+     }
+    }
+   }
+  },
+  "negative-claim-deleted": {
+   "file": "src/ui/ownerPanel.ts",
+   "find": "export const NEGATIVE_CLAIM =\n  'ML-KEM agreed on a secret and proved nothing about who is holding the other end of it.'",
+   "replace": "export const NEGATIVE_CLAIM = 'The exchange completed.'",
+   "why": "Section 4.1d's own mutation requirement: delete the negative-claim text and assertion 3 must fail. The sentence is the whole point of panel 4 -- without it the fixture is a flawless exchange with a red badge and no explanation -- so a lab where this patch survives has a decorative negative claim.",
+   "kills": {
+    "key-owner": {
+     "test": "the limitation is on screen in that state, not in the README",
+     "claim": {
+      "contains": "ML-KEM agreed on a secret and proved nothing about who is holding the other end of it.",
+      "tone": "alarm"
+     }
+    }
+   }
+  },
+  "panel-1-retires-panel-3": {
+   "file": "src/main.ts",
+   "find": "  renderComparison(state)\n  // Deliberately does NOT touch panel 3",
+   "replace": "  renderComparison(state)\n  breakPanel.reset(state.pqExchange, state.pqRun)\n  // Deliberately does NOT touch panel 3",
+   "why": "Section 4.1b's no-op guard, inverted: panel 1 is a different exchange, so running it must leave panel 3's conclusion standing. This patch makes an unrelated action throw away a verdict the reader is still reading. The comment it adds the call beneath is left in place deliberately, so the mutated source reads as self-contradictory rather than plausible.",
+   "kills": {
+    "byte-flip": {
+     "test": "re-running panel 1 does NOT retire a fresh broken result",
+     "claim": {
+      "text": "Different secrets — and nothing reported a failure",
+      "tone": "trap"
+     }
+    }
+   }
+  }
+ }
+}

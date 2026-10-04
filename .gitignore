@@ -1,0 +1,14 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+coverage/
+*.tsbuildinfo
+*.log
+.DS_Store
+chat.md
+# The fleet master template is a local, gitignored working copy. A committed
+# snapshot of it ages silently into a second, wrong standard (template §4.1).
+CRYPTO-LAB-TEMPLATE.md
+_MASTER-TEMPLATE.md
+template.md

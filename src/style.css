@@ -1,0 +1,628 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   What Is PQC — the fleet's beginner on-ramp to post-quantum cryptography.
+
+   TWO THINGS ABOUT THIS STYLESHEET ARE DELIBERATE AND EASY TO UNDO BY ACCIDENT.
+
+   1. PANELS 1 AND 2 SHARE EVERY RULE. There is no `.exchange--pq` and there is
+      no accent on the post-quantum panel. The brief's central argument is that
+      ML-KEM is doing the SAME JOB as X25519 on a different hard problem, and any
+      visual that made the ML-KEM panel look heavier, safer or more important
+      would be making the "stronger" claim this lab exists to refuse. If a future
+      edit wants to distinguish them, that is a change to the lab's thesis and
+      belongs in a pull request that says so.
+
+   2. CONTRAST HERE DOES NOT DEPEND ON --accent. The catalog assigns each lab's
+      accent centrally and this one has not been assigned yet, so every ratio the
+      a11y gate measures had to come out the same whatever lands. Accent is
+      therefore used only for low-percentage washes behind body text and for
+      borders mixed toward an ink token — never as a text colour, never as a fill
+      under text. Text on a coloured fill uses a dedicated ink token (§4.2).
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* --accent is a CENTRAL ASSIGNMENT (catalog), not a choice made in this repo.
+     Until it is assigned this holds the fleet's own documented fallback — the
+     value .cl-topbar uses when --accent is undefined — so the page renders and
+     the gate measures something real. Replacing this one line is the whole of
+     applying the assigned accent; see README "Central assignments pending". */
+  --accent: #35d6bb;
+
+  --bg: #0a1014;
+  --surface: #121b21;
+  --surface-2: #19242c;
+  --border: #31454f;
+  --border-strong: #567183;
+
+  --text: #e8f1f5;
+  /* Muted text lowers LIGHTNESS rather than using opacity (§4.2): an opacity
+     stack is invisible to axe and to the arithmetic contrast oracle alike. */
+  --text-dim: #b4c6ce;
+  --text-muted: #94a9b3;
+
+  /* State tokens. Every one of these is paired with an icon and a word in the
+     markup — colour never carries state on its own (WCAG 1.4.1). */
+  --pass: #58d6a8;
+  --pass-wash: #10261f;
+  --trap: #e9b259;
+  --trap-wash: #2a1f0c;
+  --alarm: #ff8f7e;
+  --alarm-wash: #2d1310;
+
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Scoped to the lab's own subtree, not global. `.cl-topbar` is shared chrome that
+   lives outside `#app` and is written for every lab in the fleet; changing the box
+   model under it from one lab is how a fleet-wide header starts rendering
+   differently in one place for no stated reason.
+   Inside `#app` it is load-bearing: `.cl-hero-why` is `width: 100%` with 1rem of
+   padding and a border, which under content-box measured 398px inside a 363px
+   container and pushed the document 22px sideways at 390px — a WCAG 1.4.10 failure
+   that only the reflow oracle sees, because axe has no rule for it. */
+#app,
+#app *,
+#app *::before,
+#app *::after {
+  box-sizing: border-box;
+}
+
+/* The longhand, not the `background` shorthand: axe and WebKit miss the
+   shorthand on <html> (§4.2). */
+html {
+  background-color: var(--bg);
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+#app {
+  max-width: 62rem;
+  margin: 0 auto;
+  /* One side gutter, set once, so nothing has to re-state it. */
+  padding: 0 clamp(0.85rem, 3vw, 2rem) 3rem;
+}
+
+#app:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+/* Base element rules are scoped to #app, never global, so they cannot fight the
+   always-dark shared top bar (§4.2). */
+#app p {
+  margin: 0 0 0.9rem;
+}
+
+#app p:last-child {
+  margin-bottom: 0;
+}
+
+#app h2 {
+  margin: 0;
+  font-size: clamp(1.1rem, 2.4vw, 1.4rem);
+  line-height: 1.3;
+  letter-spacing: 0.005em;
+}
+
+/* Inline links keep a persistent underline — colour alone is not enough (§4.2). */
+#app a {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--border-strong);
+}
+
+#app a:hover {
+  text-decoration-color: var(--text);
+}
+
+#app a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+#app code {
+  font-family: var(--mono);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+}
+
+/* ── Hero (template §3.1, standard CSS with this lab's tokens) ───────────── */
+.cl-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: clamp(1rem, 4vw, 3rem);
+  flex-wrap: wrap;
+  margin: clamp(1rem, 3vw, 2rem) 0 1.5rem;
+}
+.cl-hero-main {
+  flex: 1 1 22rem;
+  min-width: min(100%, 20rem);
+}
+.cl-hero-title {
+  margin: 0;
+  font-size: clamp(1.6rem, 3.8vw, 2.7rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+}
+.cl-hero-sub {
+  margin: 0.4rem 0 0;
+  font-size: clamp(0.9rem, 1.6vw, 1.05rem);
+  letter-spacing: 0.01em;
+  color: var(--text-dim);
+}
+.cl-hero-desc {
+  margin: 0.55rem 0 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+  max-width: 60ch;
+}
+.cl-hero-why {
+  flex: 0 1 min(40%, 26rem);
+  min-width: min(100%, 15rem);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.85rem 1.05rem;
+  background: color-mix(in oklab, var(--accent) 6%, var(--surface));
+}
+.cl-hero-why-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+}
+.cl-hero-why-text {
+  margin: 0.35rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+@media (max-width: 640px) {
+  .cl-hero {
+    flex-direction: column;
+  }
+  .cl-hero-why {
+    flex-basis: auto;
+    width: 100%;
+  }
+}
+
+/* ── Cards ──────────────────────────────────────────────────────────────── */
+.card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  padding: clamp(0.9rem, 2.5vw, 1.5rem);
+  margin: 0 0 1.25rem;
+}
+
+.panel-head {
+  margin-bottom: 0.7rem;
+}
+
+.panel-step {
+  margin: 0 0 0.25rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.panel-lede,
+.intro-plan,
+.panel-note {
+  color: var(--text-dim);
+  max-width: 68ch;
+}
+
+.panel-note {
+  font-size: 0.95rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.8rem;
+  margin-top: 1rem;
+}
+
+.panel-after {
+  margin-top: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.9rem;
+  max-width: 68ch;
+}
+
+.panel-link {
+  font-size: 0.95rem;
+  color: var(--text-dim);
+}
+
+.intro h2 {
+  margin-bottom: 0.7rem;
+}
+
+/* ── Callouts ───────────────────────────────────────────────────────────── */
+.callout {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  border: 1px solid var(--trap);
+  border-left-width: 4px;
+  border-radius: 8px;
+  background: var(--trap-wash);
+  padding: 0.75rem 0.9rem;
+  margin: 1rem 0;
+}
+
+.callout-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 1px solid var(--trap);
+  border-radius: 50%;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.85rem;
+  line-height: 1;
+  color: var(--trap);
+}
+
+.callout p {
+  margin: 0;
+}
+
+/* ── The exchange panels (1 and 2 — one rule set, see the header note) ──── */
+.parties {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.8rem;
+  margin: 0 0 0.9rem;
+}
+
+.party {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  padding: 0.75rem 0.85rem;
+}
+
+.party-name {
+  margin: 0 0 0.35rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.party-role {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.party-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.party-secret {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.wire {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  margin: 0 0 0.9rem;
+}
+
+.wire-title {
+  margin: 0 0 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.wire-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.wire-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.95rem;
+}
+
+.wire-item-label {
+  color: var(--text-dim);
+}
+
+.wire-item-bytes {
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+
+/* ── Verdicts: icon + word + colour, never colour alone ─────────────────── */
+.verdict {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  border: 1px solid var(--border-strong);
+  border-left-width: 4px;
+  border-radius: 8px;
+  padding: 0.7rem 0.85rem;
+  background: var(--surface-2);
+}
+
+.verdict-glyph {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.verdict-text {
+  margin: 0;
+}
+
+.verdict-headline {
+  display: block;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.verdict-detail {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.95rem;
+  color: var(--text-dim);
+}
+
+.verdict[data-tone='pass'] {
+  border-color: var(--pass);
+  background: var(--pass-wash);
+}
+.verdict[data-tone='pass'] .verdict-glyph {
+  color: var(--pass);
+}
+
+.verdict[data-tone='trap'] {
+  border-color: var(--trap);
+  background: var(--trap-wash);
+}
+.verdict[data-tone='trap'] .verdict-glyph {
+  color: var(--trap);
+}
+
+.verdict[data-tone='alarm'] {
+  border-color: var(--alarm);
+  background: var(--alarm-wash);
+}
+.verdict[data-tone='alarm'] .verdict-glyph {
+  color: var(--alarm);
+}
+
+/* A verdict that is about an exchange the reader has since replaced. It is
+   retired rather than silently left on screen (§4.1b). */
+.verdict[data-tone='retired'] {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text-dim);
+}
+.verdict[data-tone='retired'] .verdict-glyph {
+  color: var(--text-dim);
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.6rem;
+  padding: 0.55rem 1rem;
+  border-radius: 9px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn:hover {
+  border-color: var(--text-dim);
+  background: color-mix(in oklab, var(--accent) 12%, var(--surface-2));
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  margin-top: 0.2rem;
+}
+
+/* ── The size comparison ────────────────────────────────────────────────── */
+.size-rows {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0 0 0.9rem;
+}
+
+.size-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem 1rem;
+  align-items: baseline;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-2);
+  padding: 0.6rem 0.8rem;
+}
+
+.size-row-label {
+  color: var(--text-dim);
+}
+
+.size-row-value {
+  font-family: var(--mono);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.size-sum {
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  color: var(--text-dim);
+  margin: 0 0 0.9rem;
+}
+
+/* ── Panel 4's choice of who handed over the key ────────────────────────── */
+.choice {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem 0.85rem;
+  margin: 0 0 0.9rem;
+}
+
+.choice-legend {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.choice-options {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.choice-option {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  min-height: 2.4rem;
+  padding: 0.35rem 0.1rem;
+  cursor: pointer;
+}
+
+.choice-option input {
+  margin: 0.3rem 0 0;
+  accent-color: var(--accent);
+  min-width: 1rem;
+  min-height: 1rem;
+}
+
+.choice-option input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.choice-option-text {
+  display: block;
+}
+
+.choice-option-note {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* ── Link lists and the honesty card ───────────────────────────────────── */
+.link-list,
+.honesty-list {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.link-list li,
+.honesty-list li {
+  color: var(--text-dim);
+  padding-left: 1rem;
+  position: relative;
+}
+
+.link-list li::before,
+.honesty-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.65em;
+  width: 0.4rem;
+  height: 1px;
+  background: var(--border-strong);
+}
+
+.honesty-lead {
+  color: var(--text);
+}
+
+/* ── Scripture footer (template §3.3) ──────────────────────────────────── */
+.scripture-footer {
+  border-top: 1px solid var(--border);
+  margin-top: 2rem;
+  padding-top: 1rem;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.scripture-footer p {
+  margin: 0;
+}
+
+/* ── Motion ─────────────────────────────────────────────────────────────── */
+/* There is no decorative motion in this lab (§2) and nothing animates on idle.
+   The one transition is a button's hover fill, which is tied to a pointer. The
+   reduced-motion block cancels it and restores nothing, because nothing here
+   relies on an animation to reach its visible state. */
+@media (prefers-reduced-motion: reduce) {
+  #app *,
+  #app *::before,
+  #app *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

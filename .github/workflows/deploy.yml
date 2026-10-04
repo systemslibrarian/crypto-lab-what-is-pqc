@@ -1,0 +1,161 @@
+name: Build, verify, and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:            # the gate must judge pull requests too (§6.1)
+    branches: [main]
+  workflow_dispatch:       # so an auto-merged bump can dispatch a deploy (§6.2)
+
+concurrency:
+  # Per-ref, so a pull request run can never cancel a live main deploy. NOT a bare
+  # `pages` group, which is what 16 workflow files in this fleet still carry: it
+  # only bites once the workflow gains a pull_request trigger, which the block
+  # above adds.
+  group: pages-${{ github.ref }}
+  # Cancel superseded pull request runs only. A deploy-bearing run must never be
+  # cancelled: two Dependabot auto-merges landing seconds apart each dispatch a run
+  # into this group, and with unconditional cancel-in-progress the earlier one is
+  # killed mid-deploy. A `cancelled` run reads as "a run existed" while nothing was
+  # published, which is one of the two shapes that hid this fleet's 2026-08-20
+  # staleness.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # §4.1c. Every rendered verdict carries data-verdict, every marker is covered by
+  # a recorded mutation, and nothing renders an outcome outside a marker. Its own
+  # job so it is its own check and can be a REQUIRED status check on main: a check
+  # that runs but cannot block anything is decoration. Auto-merge waits only on
+  # required checks, and `deploy` below waits on this job by `needs:`, which also
+  # covers a direct push to main — the path that skips pull request checks.
+  verdicts:
+    name: verdicts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      # CI is set by Actions, so playwright.config.ts turns off reuseExistingServer
+      # and the suite can only hit a server built from this checkout. A reused or
+      # shared-port server makes a real kill look like a survivor; this lab's port
+      # (4212) is pinned in the catalog's tools/playwright-ports.json.
+      - name: Claims and verdict coverage
+        run: npm run test:claims
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      # configure-pages@v6 enables Pages on first use and needs these two. With
+      # `contents: read` alone it returns 403.
+      pages: write
+      id-token: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      # The WHOLE suite, not just the a11y half. A 2026-08-14 sweep found 29 repos
+      # whose deploy job ran test:a11y alone, so their unit and algorithmic suites
+      # never blocked a publish — one of them could ship a build whose cryptography
+      # was broken so long as the browser specs passed. These are the known-answer
+      # vectors: NIST ACVP for ML-KEM-768 and RFC 7748 for X25519.
+      - name: Unit and known-answer tests
+        run: npm test
+      - name: Production build
+        run: npm run build
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      - name: Accessibility gate (axe-core, WCAG A/AA, at 1280 / 390 / 320)
+        run: npm run test:a11y
+      - name: Configure GitHub Pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v6
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    # NOT `== 'push'`. That also skips workflow_dispatch, which is the one trigger
+    # §6.2 depends on: the dispatched run would build, pass the gate, and skip this
+    # job, so the site would still never update.
+    if: github.event_name != 'pull_request'
+    needs: [build, verdicts]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+  dependabot-auto-merge:
+    # `needs:` is the whole safety argument — the gate decides, not the version
+    # number. A major that breaks the lab fails the gate and the pull request stays
+    # open for a human.
+    if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
+    needs: [build, verdicts]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      # actions: write is required for the deploy dispatch below. Without it
+      # `gh workflow run` returns HTTP 403 "Resource not accessible by
+      # integration", the merged bump never deploys, and a `|| echo` fallback
+      # hides it.
+      actions: write
+    steps:
+      - name: Read Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v3
+      - name: Merge any bump whose gate went green, and dispatch the deploy
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          for attempt in 1 2 3; do
+            gh pr merge --squash --delete-branch "$PR_URL" && merged=1 && break
+            sleep 15   # a sibling pull request merging first moves main under us
+          done
+          # Fail loudly. `exit 0` here leaves a green job, an open pull request with
+          # a passing gate, and an annotation nobody reads — structurally the same
+          # swallow that hid four separate non-deploy bugs across this fleet on
+          # 2026-08-20.
+          [ -n "$merged" ] || { echo "::error::gate passed but the merge did not land after 3 attempts"; exit 1; }
+          # A merge made with GITHUB_TOKEN raises no push event -- GitHub suppresses
+          # them so workflows cannot retrigger themselves -- so deploy would never run
+          # and the site would keep serving the previous build. Ask for it explicitly;
+          # a workflow_dispatch through the API is not suppressed. The dispatched run
+          # is the same gate-then-deploy pipeline, so a bad merge still ships nothing.
+          #
+          # This lab's workflow file is deploy.yml, which is what is dispatched below.
+          # The fleet is not consistent about that name -- some labs have
+          # deploy-pages.yml or pages.yml -- and a copied name 404s ONLY on the
+          # auto-merge path, after the merge has already landed. See §6.2.
+          gh workflow run deploy.yml --repo "$GITHUB_REPOSITORY" --ref main

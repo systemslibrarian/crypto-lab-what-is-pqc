@@ -1,0 +1,23 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-and-patch:
+        patterns: ["*"]
+        # Majors stay individual, on purpose. When this fleet's 2026-08-18 backlog
+        # was landed, 109 bumps had to be held back and they were overwhelmingly
+        # majors: one breaking major inside a grouped pull request makes the whole
+        # thing unmergeable, which is the hand-unpicking this exists to prevent.
+        update-types: ["minor", "patch"]
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns: ["*"]
