@@ -20,12 +20,10 @@
    ─────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* --accent is a CENTRAL ASSIGNMENT (catalog), not a choice made in this repo.
-     Until it is assigned this holds the fleet's own documented fallback — the
-     value .cl-topbar uses when --accent is undefined — so the page renders and
-     the gate measures something real. Replacing this one line is the whole of
-     applying the assigned accent; see README "Central assignments pending". */
-  --accent: #35d6bb;
+  /* Assigned centrally from the catalog on 2026-10-04, chosen so this card
+     differs from its neighbours at four, two and one columns. Contrast here was
+     built not to depend on it, so the a11y gate measures what it always did. */
+  --accent: #ff6b7f;
 
   --bg: #0a1014;
   --surface: #121b21;
