@@ -23,7 +23,7 @@
   /* Assigned centrally from the catalog on 2026-10-04, chosen so this card
      differs from its neighbours at four, two and one columns. Contrast here was
      built not to depend on it, so the a11y gate measures what it always did. */
-  --accent: #ff6b7f;
+  --accent: #35d6bb;
 
   --bg: #0a1014;
   --surface: #121b21;
