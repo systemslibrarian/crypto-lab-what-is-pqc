@@ -19,9 +19,11 @@ export function fromHex(hex: string): Uint8Array {
   if (hex.length % 2 !== 0) throw new Error(`hex string has odd length: ${hex.length}`)
   const out = new Uint8Array(hex.length / 2)
   for (let i = 0; i < out.length; i++) {
-    const byte = Number.parseInt(hex.slice(i * 2, i * 2 + 2), 16)
-    if (Number.isNaN(byte)) throw new Error(`not hex at offset ${i * 2}`)
-    out[i] = byte
+    const pair = hex.slice(i * 2, i * 2 + 2)
+    // Number.parseInt accepts a valid prefix (for example, "0g" becomes 0),
+    // so validate both characters before converting the byte.
+    if (!/^[0-9a-fA-F]{2}$/.test(pair)) throw new Error(`not hex at offset ${i * 2}`)
+    out[i] = Number.parseInt(pair, 16)
   }
   return out
 }

@@ -84,6 +84,16 @@ describe('breaking one byte of the ciphertext (panel 3)', () => {
     expect(() => corruptOneByte(exchange, exchange.cipherText.length)).toThrow(/outside/)
     expect(() => corruptOneByte(exchange, -1)).toThrow(/outside/)
   })
+
+  it('requires a mask that flips exactly one bit', () => {
+    const exchange = runPqExchange()
+    for (const mask of [0, 0x03, 0xff, 0x100, -1, 1.5, Number.NaN]) {
+      expect(() => corruptOneByte(exchange, 0, mask)).toThrow(/exactly one bit/)
+    }
+    for (const mask of [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80]) {
+      expect(() => corruptOneByte(exchange, 0, mask)).not.toThrow()
+    }
+  })
 })
 
 describe('who sent that key (panel 4 — the negative claim)', () => {

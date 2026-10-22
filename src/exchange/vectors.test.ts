@@ -77,8 +77,8 @@ describe('ML-KEM-768 against NIST ACVP vectors', () => {
   it.each(subset.groups.keyGen.tests.map((t) => [t.tcId, t] as const))(
     'keyGen tcId %i derives the published encapsulation and decapsulation keys',
     (_tcId, test) => {
-      // FIPS 203 Algorithm 16: KeyGen is randomized, and its deterministic hook
-      // takes d || z. @noble/post-quantum spells that one 64-byte seed.
+      // FIPS 203 Algorithm 16, ML-KEM.KeyGen_internal, takes d and z.
+      // @noble/post-quantum spells that pair as one 64-byte seed.
       const seed = new Uint8Array(64)
       seed.set(fromHex(test.d as string), 0)
       seed.set(fromHex(test.z as string), 32)
@@ -91,7 +91,8 @@ describe('ML-KEM-768 against NIST ACVP vectors', () => {
   it.each(subset.groups.encapsulation.tests.map((t) => [t.tcId, t] as const))(
     'encapsulation tcId %i produces the published ciphertext and shared secret',
     (_tcId, test) => {
-      // FIPS 203 Algorithm 17: the 32-byte message m fixes all the randomness.
+      // FIPS 203 Algorithm 17, ML-KEM.Encaps_internal: the 32-byte message m
+      // fixes all the randomness.
       const out = ml_kem768.encapsulate(fromHex(test.ek as string), fromHex(test.m as string))
       expect(toHex(out.cipherText)).toBe((test.c as string).toLowerCase())
       expect(toHex(out.sharedSecret)).toBe((test.k as string).toLowerCase())
