@@ -12,6 +12,9 @@ describe('byte helpers', () => {
   it('rejects a malformed hex string rather than guessing', () => {
     expect(() => fromHex('abc')).toThrow(/odd length/)
     expect(() => fromHex('zz')).toThrow(/not hex/)
+    expect(() => fromHex('0g')).toThrow(/not hex at offset 0/)
+    expect(() => fromHex('00g0')).toThrow(/not hex at offset 2/)
+    expect(() => fromHex(' 0')).toThrow(/not hex/)
   })
 
   it('compares every byte, including when the difference is in the last one', () => {

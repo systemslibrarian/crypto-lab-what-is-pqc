@@ -175,7 +175,7 @@ npm run dev
 Then the full gate, which is what CI runs:
 
 ```bash
-npm test             # 49 unit and known-answer tests
+npm test             # 54 unit and known-answer tests
 npm run build        # tsc --noEmit, then the production bundle
 npm run test:a11y    # axe WCAG 2.1 A/AA at 1280 / 390 / 320 px
 npm run test:claims  # what the page says and concludes, plus verdict coverage

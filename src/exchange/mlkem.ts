@@ -106,6 +106,14 @@ export function corruptOneByte(
   if (!Number.isInteger(byteIndex) || byteIndex < 0 || byteIndex >= exchange.cipherText.length) {
     throw new Error(`byteIndex ${byteIndex} is outside the ${exchange.cipherText.length}-byte ciphertext`)
   }
+  if (
+    !Number.isInteger(bitMask) ||
+    bitMask < 1 ||
+    bitMask > 0x80 ||
+    (bitMask & (bitMask - 1)) !== 0
+  ) {
+    throw new Error(`bitMask ${bitMask} must select exactly one bit in a byte`)
+  }
   const corrupted = exchange.cipherText.slice()
   corrupted[byteIndex] ^= bitMask
 
