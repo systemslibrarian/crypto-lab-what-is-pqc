@@ -135,6 +135,7 @@ jobs:
         id: meta
         uses: dependabot/fetch-metadata@v3
       - name: Merge any bump whose gate went green, and dispatch the deploy
+        if: steps.meta.outputs.update-type != 'version-update:semver-major'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}
