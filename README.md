@@ -156,9 +156,17 @@ Three real failure modes, two of them visible on the page.
 ML-KEM is the NIST-standardised key encapsulation mechanism, published as **FIPS 203** in
 August 2024 and derived from CRYSTALS-Kyber. ML-KEM-768 is the parameter set most deployments
 have picked. It is already carrying live traffic: hybrid X25519+ML-KEM-768 key agreement is
-deployed in TLS 1.3 by major browsers and CDNs, in SSH, and in Signal's PQXDH. Hybrid, not
-replacement — both exchanges run and their secrets are combined — precisely because ML-KEM is
-newer and the argument for it is "a different hard problem", not "a stronger lock".
+deployed in TLS 1.3 by major browsers and CDNs, and in SSH. Signal's PQXDH pairs X25519 with
+the same lattice idea, but its [specification](https://signal.org/docs/specifications/pqxdh/)
+gives CRYSTALS-KYBER-1024 — the pre-standard Kyber, not ML-KEM-768 — as its KEM example.
+Hybrid, not replacement — both exchanges run and their secrets are combined — precisely
+because ML-KEM is newer and the argument for it is "a different hard problem", not "a stronger
+lock".
+
+**Standards reviewed 15 November 2026:** the PQXDH specification (Revision 3, last updated
+2024-01-23) defines `pqkem` with the example "Crystals-Kyber-1024" and names
+CRYSTALS-KYBER-1024 in its worked parameter choice; it does not mention ML-KEM. This section
+previously listed PQXDH among the X25519+ML-KEM-768 deployments.
 
 X25519 (RFC 7748) remains everywhere and is not broken today. What it has is a known quantum
 solution, and traffic recorded today outlives the key that protected it.
