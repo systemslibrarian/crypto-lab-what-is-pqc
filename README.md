@@ -208,7 +208,7 @@ directory so a crash cannot strand an inverted condition in a file that also hol
 
 ## Build & Verify
 
-**53 unit tests** across five files, and **42 browser tests** across three Playwright projects.
+**54 unit tests** across five files, and **42 browser tests** across three Playwright projects.
 
 **Known-answer tests, with their provenance kept separate** — because "pinned from the
 specification" and "reproduced from a validated implementation" are not the same evidence, and
