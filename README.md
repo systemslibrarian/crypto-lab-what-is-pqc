@@ -6,8 +6,8 @@ suite's way in to post-quantum cryptography, for someone who has never met any.
 ## What It Is
 
 A browser demo that runs the same job twice: **X25519** (RFC 7748) and **ML-KEM-768**
-(FIPS 203), side by side, in symmetrical panels, so the only difference a reader can see is
-the one that is actually there.
+(FIPS 203). The two panels measure the key-agreement messages and show the secret each
+participant obtains. The lesson explains the different assumptions behind the exchanges.
 
 The point it exists to make is a correction. **Post-quantum cryptography is not stronger
 cryptography.** It is not a bigger lock. It rests on a *different hard problem*, because the
@@ -129,9 +129,10 @@ every value on screen was computed in your tab when you looked at it.
 
 Three real failure modes, two of them visible on the page.
 
-- **A corrupted ciphertext does not raise an error.** FIPS 203's decapsulation uses the
-  Fujisaki-Okamoto transform's *implicit rejection*: a ciphertext that does not re-encrypt to
-  itself yields a secret derived from a per-key rejection value. The caller gets 32 perfectly
+- **A changed ciphertext can still return a secret.** FIPS 203 §7.3 requires an ML-KEM-768
+  ciphertext to be exactly 1,088 bytes. Truncating or extending it fails input validation.
+  Changing a byte preserves its length. If the re-encryption check then fails, *implicit
+  rejection* returns a secret derived from the received ciphertext and a per-key rejection value. The caller gets 32 perfectly
   well-formed bytes that are simply not the other side's 32 bytes. Software that treats "no
   exception" as "the exchange worked" is silently broken. **Exhibit 4.** NIST's own published
   vectors say so too: five of the ten ML-KEM-768 decapsulation test cases are marked

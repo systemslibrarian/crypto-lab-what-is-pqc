@@ -15,7 +15,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Runs a real ML-KEM-768 encapsulation and decapsulation beside a classical X25519 exchange, so the only visible difference is what a future machine could undo."
+      content="Runs a real ML-KEM-768 encapsulation and decapsulation beside a classical X25519 exchange to compare the bytes exchanged and explain why the two methods face different quantum risks."
     />
     <!-- Assigned centrally from the catalog on 2026-10-04: a telescope, which no
          other lab in the fleet uses. Inline data: URI (template §3.4) so it
@@ -153,7 +153,7 @@
           <p class="cl-hero-sub">ML-KEM-768 · FIPS 203 · why today's keys are at risk</p>
           <p class="cl-hero-desc">
             Runs a real ML-KEM-768 encapsulation and decapsulation beside a classical X25519
-            exchange, so the only visible difference is what a future machine could undo.
+            exchange to compare the bytes exchanged and explain why the two methods face different quantum risks.
           </p>
         </div>
         <aside class="cl-hero-why" aria-label="Why it matters">
@@ -193,22 +193,19 @@
             <strong>shared secret</strong> — bytes both of them end up holding — even though
             everything they send each other can be read by anyone in between. That secret is not
             the message. A real application takes it and derives the keys that actually protect
-            the conversation. Agreeing on it is the step this page is about, and your browser does
-            it every time you load a page over HTTPS.
+            the conversation. An HTTPS connection can negotiate a shared secret during its
+            handshake. Loading another page can reuse that connection.
           </p>
           <p>
-            The way it is done today rests on one particular maths problem being hard to undo.
-            Quantum computers exist; one big enough to undo that problem does not, and is expected
-            to be able to. So people built other ways to agree on a secret that rest on a
-            <em>different</em> hard problem — one that machine is not expected to help with. Those
-            are what "post-quantum" means.
+            Quantum computers exist. Breaking the classical exchange shown here would take a
+            much more capable one than any demonstrated so far. The post-quantum exchange uses a <em>different</em>
+            hard problem. No comparable quantum shortcut is known for it.
           </p>
           <details class="learn-more">
             <summary>What the four panels below do, and the words they use</summary>
             <p class="intro-plan">
-              The same job done twice — once the way it is done today, once the post-quantum way,
-              with real cryptography both times. Then the one thing that measurably changed, one
-              byte broken on purpose, and one thing neither method does for you.
+              Run two real key exchanges, compare their message sizes, change one byte and test
+              what either method tells you about the person who supplied the key.
             </p>
             <dl class="glossary">
               <dt>Shared secret</dt>
@@ -293,9 +290,8 @@
           </button>
           <div class="panel-after">
             <p>
-              A quantum computer is <strong>not</strong> expected to help with the problem this one
-              rests on. That is the whole change. The secret is the same size, the two sides still
-              match, and the job is the same job.
+              No efficient quantum attack is known against ML-KEM-768. Both exchanges produce
+              32-byte secrets. Compare the messages they send in the next panel.
             </p>
             <details class="learn-more">
               <summary>Why these bytes are not panel 1's bytes</summary>
@@ -312,11 +308,11 @@
         <section class="card sizes" id="panel-sizes" aria-labelledby="sizes-title">
           <div class="panel-head">
             <p class="panel-step">What actually changed</p>
-            <h2 id="sizes-title">Bigger, on a different problem — and that is the whole list</h2>
+            <h2 id="sizes-title">How many bytes cross the wire?</h2>
           </div>
           <p class="panel-lede">
-            Put the two panels side by side and there is exactly one difference you can measure:
-            how many bytes crossed the wire. You can check this one with division.
+            Compare the bytes that crossed the wire in the two key exchanges. Divide one total
+            by the other. This panel measures message sizes. It does not time either exchange.
           </p>
           <div id="sizes-body"></div>
           <p class="panel-note">
@@ -349,10 +345,10 @@
           <div id="break-body"></div>
           <div class="panel-after">
             <p>
-              <strong>ML-KEM did not report a failure.</strong> No error, no exception, no
-              rejected message. Rae opened a box that had been tampered with and got back a
-              perfectly well-formed secret that simply is not Dev's. The standard specifies that
-              behaviour rather than an error.
+              <strong>Changing a byte keeps the box at 1,088 bytes.</strong> If the re-encryption
+              check fails, ML-KEM returns a 32-byte fallback secret derived from the changed
+              box and a secret value in Rae's key. A truncated or extended box fails the
+              separate input-length check before this step (FIPS 203, §7.3).
             </p>
             <details class="learn-more">
               <summary>So how does real software catch it?</summary>

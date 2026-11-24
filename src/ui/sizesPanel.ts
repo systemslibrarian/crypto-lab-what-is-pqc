@@ -4,7 +4,7 @@ import { clear, el } from './dom.js'
 import { createVerdict } from './verdict.js'
 
 /**
- * The one measurable difference between panels 1 and 2, stated as arithmetic and
+ * The key-agreement message sizes from panels 1 and 2, stated as arithmetic and
  * drawn as two bars.
  *
  * Every number rendered here was measured from the byte arrays the two panels

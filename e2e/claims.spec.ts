@@ -238,6 +238,14 @@ test.describe('the size comparison', () => {
 })
 
 test.describe('breaking one byte', () => {
+  test('the lesson distinguishes a one-byte change from a length error', async ({ page }) => {
+    await boot(page)
+    const scope = page.locator('#panel-break .panel-after > p').first()
+    await expect(scope).toContainText('1,088 bytes')
+    await expect(scope).toContainText('32-byte fallback secret')
+    await expect(scope).toContainText('truncated or extended box fails')
+  })
+
   test('the untouched state says nothing has changed and the secrets match', async ({ page }) => {
     await boot(page)
     await expectVerdict(page, 'byte-flip', {

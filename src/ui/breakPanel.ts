@@ -1,5 +1,5 @@
-import { hexPrefix } from '../exchange/bytes.js'
-import { corruptOneByte, outcomeOfBrokenBox, type PqExchange } from '../exchange/mlkem.js'
+import { equalBytes, hexPrefix } from '../exchange/bytes.js'
+import { corruptOneByte, outcomeOfBrokenBox, type BrokenBoxOutcome, type PqExchange } from '../exchange/mlkem.js'
 import { formatBytes } from '../exchange/sizes.js'
 import { clear, el } from './dom.js'
 import { createPrediction, gradePrediction } from './predict.js'
@@ -145,7 +145,7 @@ export function createBreakPanel(
    * cannot drift from what the facts rows above it report. Before the byte has been
    * changed there is no outcome to grade against, so the marker waits.
    */
-  const grade = (outcome: string | null): void => {
+  const grade = (outcome: BrokenBoxOutcome | null): void => {
     predict.verdict.set(
       outcome === null
         ? gradePrediction({
@@ -160,10 +160,11 @@ export function createBreakPanel(
             actual: outcome,
             outcomes: BREAK_OUTCOMES,
             run: currentRun,
-            because:
-              'FIPS 203 specifies that a ciphertext which does not re-encrypt to itself ' +
-              'yields a secret derived from a per-key rejection value. A well-formed secret, ' +
-              'just not the other side\u2019s one, and no error to go with it.',
+            because: {
+              differ: 'The changed box kept its length. ML-KEM returned 32 bytes and the two secrets differ.',
+              error: 'This run raised an error while opening the changed box.',
+              nothing: 'This run produced matching secrets after the byte changed.',
+            }[outcome],
           }),
     )
   }
@@ -171,11 +172,12 @@ export function createBreakPanel(
   function render(next: Mode): void {
     mode = next
 
+    const originalSecretsMatch = equalBytes(current.raeSharedSecret, current.devSharedSecret)
     if (mode === 'retired') {
       renderCompare(
         hexPrefix(current.raeSharedSecret),
         hexPrefix(current.devSharedSecret),
-        true,
+        originalSecretsMatch,
         null,
       )
       verdict.set({
@@ -197,16 +199,17 @@ export function createBreakPanel(
       renderCompare(
         hexPrefix(current.raeSharedSecret),
         hexPrefix(current.devSharedSecret),
-        true,
+        originalSecretsMatch,
         null,
       )
       verdict.set({
-        tone: 'pass',
+        tone: originalSecretsMatch ? 'pass' : 'alarm',
         run: currentRun,
-        headline: 'Nothing has been changed yet',
+        headline: originalSecretsMatch ? 'Nothing has been changed yet' : 'The untouched exchange already disagrees',
         detail:
           `The sealed box from panel 2 is ${formatBytes(current.cipherText.length)} bytes and is ` +
-          `untouched, so Rae and Dev hold the same ${current.raeSharedSecret.length} bytes. ` +
+          `untouched. ` +
+          (originalSecretsMatch ? `Rae and Dev hold the same ${current.raeSharedSecret.length} bytes. ` : 'Their original secrets differ. ') +
           'Change one byte of it and watch what happens to the pair above.',
       })
       button.textContent = 'Change one byte of the sealed box'

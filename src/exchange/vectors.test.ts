@@ -107,6 +107,17 @@ describe('ML-KEM-768 against NIST ACVP vectors', () => {
     },
   )
 
+  it('rejects truncated and extended ciphertexts before implicit rejection', () => {
+    const test = subset.groups.decapsulation.tests[0]
+    const ciphertext = fromHex(test.c as string)
+    const secretKey = fromHex(test.dk as string)
+    const extended = new Uint8Array(ciphertext.length + 1)
+    extended.set(ciphertext)
+    expect(ciphertext).toHaveLength(1088)
+    expect(() => ml_kem768.decapsulate(ciphertext.slice(0, -1), secretKey)).toThrow()
+    expect(() => ml_kem768.decapsulate(extended, secretKey)).toThrow()
+  })
+
   it('NIST publishes a shared secret, not an error, for a modified ciphertext', () => {
     // This is the lab's third panel, asserted against the published set rather
     // than against this lab's own behaviour. Five of NIST's ten ML-KEM-768

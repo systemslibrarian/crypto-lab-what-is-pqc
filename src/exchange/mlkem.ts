@@ -84,7 +84,8 @@ export interface CorruptedDecapsulation {
  * Flip one bit of the ciphertext and decapsulate it anyway.
  *
  * THIS IS THE LAB'S THIRD LESSON AND IT IS AN HONEST ONE. ML-KEM's decapsulation
- * does not fail loudly on a corrupted ciphertext. FIPS 203 §7.3 builds in the
+ * uses separate length validation and rejection steps. For a changed ciphertext of the required
+ * length, FIPS 203 §7.3 and Algorithm 18 specify the
  * Fujisaki-Okamoto transform's implicit rejection: a ciphertext that does not
  * re-encrypt to itself yields a secret derived from a per-key rejection value, so
  * the caller gets 32 perfectly well-formed bytes that simply are not the other
