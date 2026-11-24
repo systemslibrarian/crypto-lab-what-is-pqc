@@ -184,7 +184,7 @@ npm run dev
 Then the full gate, which is what CI runs:
 
 ```bash
-npm test             # 54 unit and known-answer tests
+npm test             # unit and known-answer tests
 npm run build        # tsc --noEmit, then the production bundle
 npm run test:a11y    # axe WCAG 2.1 A/AA at 1280 / 390 / 320 px
 npm run test:claims  # what the page says and concludes, plus verdict coverage
@@ -209,7 +209,7 @@ directory so a crash cannot strand an inverted condition in a file that also hol
 
 ## Build & Verify
 
-**54 unit tests** across five files, and **42 browser tests** across three Playwright projects.
+**55 unit tests** across five files and **43 browser tests** across three Playwright projects.
 
 **Known-answer tests, with their provenance kept separate** — because "pinned from the
 specification" and "reproduced from a validated implementation" are not the same evidence, and
